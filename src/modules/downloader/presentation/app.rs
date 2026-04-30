@@ -1,0 +1,272 @@
+use std::sync::Arc;
+
+use iced::alignment::Horizontal;
+use iced::executor;
+use iced::futures::SinkExt;
+use iced::subscription;
+use iced::theme::{self, Theme};
+use iced::widget::{button, column, container, progress_bar, radio, row, text, text_input};
+use iced::{Application, Color, Command, Element, Length, Settings, Subscription};
+
+use crate::modules::downloader::application::use_cases::{
+    BootstrapDependenciesUseCase, DependencyReport, DownloadMediaUseCase,
+};
+use crate::modules::downloader::domain::entities::{
+    AudioQuality, DownloadMode, DownloadProgress, DownloadRequest, Provider, VideoQuality,
+};
+use crate::modules::downloader::infrastructure::dependencies::SystemDependencies;
+use crate::modules::downloader::infrastructure::save_dialog::NativeSaveDialog;
+use crate::modules::downloader::infrastructure::yt_dlp::YtDlpAdapter;
+
+pub fn run() -> iced::Result {
+    MediaDockApp::run(Settings::default())
+}
+
+#[derive(Debug, Clone)]
+pub enum Message {
+    UrlChanged(String),
+    ModeChanged(DownloadMode),
+    VideoQualityChanged(VideoQuality),
+    AudioQualityChanged(AudioQuality),
+    BootstrapComplete(Result<DependencyReport, String>),
+    DownloadPressed,
+    DownloadProgressed(DownloadProgress),
+    DownloadComplete(Result<(), String>),
+}
+
+enum WorkerEvent {
+    Progress(DownloadProgress),
+    Done(Result<(), String>),
+}
+
+pub struct MediaDockApp {
+    url: String,
+    mode: DownloadMode,
+    video_quality: VideoQuality,
+    audio_quality: AudioQuality,
+    progress: f32,
+    status: String,
+    dependency_info: String,
+    pending_request: Option<DownloadRequest>,
+    busy: bool,
+}
+
+impl Application for MediaDockApp {
+    type Executor = executor::Default;
+    type Message = Message;
+    type Theme = Theme;
+    type Flags = ();
+
+    fn new(_flags: Self::Flags) -> (Self, Command<Message>) {
+        let app = Self {
+            url: String::new(),
+            mode: DownloadMode::VideoWithAudio,
+            video_quality: VideoQuality::Best,
+            audio_quality: AudioQuality::Best,
+            progress: 0.0,
+            status: "Bootstrapping dependencies...".to_string(),
+            dependency_info: String::new(),
+            pending_request: None,
+            busy: true,
+        };
+
+        let cmd = Command::perform(
+            async move {
+                let dep = Arc::new(SystemDependencies);
+                let use_case = BootstrapDependenciesUseCase::new(dep);
+                use_case.execute().map_err(|e| e.to_string())
+            },
+            Message::BootstrapComplete,
+        );
+
+        (app, cmd)
+    }
+
+    fn title(&self) -> String {
+        "MediaDock - YouTube Downloader".to_string()
+    }
+
+    fn theme(&self) -> Self::Theme {
+        Theme::TokyoNight
+    }
+
+    fn update(&mut self, message: Message) -> Command<Message> {
+        match message {
+            Message::UrlChanged(v) => self.url = v,
+            Message::ModeChanged(v) => self.mode = v,
+            Message::VideoQualityChanged(v) => self.video_quality = v,
+            Message::AudioQualityChanged(v) => self.audio_quality = v,
+            Message::BootstrapComplete(res) => {
+                self.busy = false;
+                match res {
+                    Ok(report) => {
+                        self.status = "Ready".to_string();
+                        self.dependency_info = format!(
+                            "Dependencies\nyt-dlp: {}\nffmpeg: {}\nffprobe: {}",
+                            report.yt_dlp, report.ffmpeg, report.ffprobe
+                        );
+                    }
+                    Err(e) => self.status = format!("Dependency error: {e}"),
+                }
+            }
+            Message::DownloadPressed => {
+                self.busy = true;
+                self.progress = 0.0;
+                self.status = "Preparing download...".to_string();
+
+                self.pending_request = Some(DownloadRequest {
+                    provider: Provider::YouTube,
+                    mode: self.mode,
+                    video_quality: self.video_quality,
+                    audio_quality: self.audio_quality,
+                    url: self.url.clone(),
+                    output_path: String::new(),
+                });
+            }
+            Message::DownloadProgressed(progress) => {
+                self.progress = progress.fraction;
+                self.status = progress.message;
+            }
+            Message::DownloadComplete(result) => {
+                self.busy = false;
+                self.pending_request = None;
+                match result {
+                    Ok(()) => {
+                        self.progress = 1.0;
+                        self.status = "Finished".to_string();
+                    }
+                    Err(e) => {
+                        self.status = format!("Download failed: {e}");
+                    }
+                }
+            }
+        }
+        Command::none()
+    }
+
+    fn subscription(&self) -> Subscription<Message> {
+        if !self.busy {
+            return Subscription::none();
+        }
+
+        let Some(request) = self.pending_request.clone() else {
+            return Subscription::none();
+        };
+
+        subscription::channel("download-progress", 100, move |mut output| async move {
+            let (tx, rx) = std::sync::mpsc::channel::<WorkerEvent>();
+
+            std::thread::spawn(move || {
+                let dependencies = Arc::new(SystemDependencies);
+                let save = Arc::new(NativeSaveDialog);
+                let yt_dlp = Arc::new(YtDlpAdapter);
+                let use_case = DownloadMediaUseCase::new(dependencies, save, yt_dlp);
+
+                let result = use_case.execute(request, &mut |progress| {
+                    let _ = tx.send(WorkerEvent::Progress(progress));
+                });
+
+                let _ = tx.send(WorkerEvent::Done(result.map_err(|e| e.to_string())));
+            });
+
+            while let Ok(event) = rx.recv() {
+                match event {
+                    WorkerEvent::Progress(progress) => {
+                        let _ = output.send(Message::DownloadProgressed(progress)).await;
+                    }
+                    WorkerEvent::Done(result) => {
+                        let _ = output.send(Message::DownloadComplete(result)).await;
+                        break;
+                    }
+                }
+            }
+
+            iced::futures::future::pending::<std::convert::Infallible>().await
+        })
+    }
+
+    fn view(&self) -> Element<'_, Message> {
+        let title = text("MediaDock")
+            .size(44)
+            .horizontal_alignment(Horizontal::Center);
+
+        let provider = container(text("YouTube").size(18))
+            .padding(10)
+            .style(theme::Container::Box);
+
+        let url_input = text_input("Paste YouTube URL", &self.url)
+            .on_input(Message::UrlChanged)
+            .padding(12)
+            .size(16);
+
+        let mode_row = row![
+            radio(
+                "Video + Audio",
+                DownloadMode::VideoWithAudio,
+                Some(self.mode),
+                Message::ModeChanged
+            ),
+            radio(
+                "Audio only (MP3)",
+                DownloadMode::AudioOnlyMp3,
+                Some(self.mode),
+                Message::ModeChanged
+            )
+        ]
+        .spacing(16);
+
+        let video_quality = row![
+            text("Video").width(Length::Fixed(80.0)),
+            radio("Best", VideoQuality::Best, Some(self.video_quality), Message::VideoQualityChanged),
+            radio("1080p", VideoQuality::P1080, Some(self.video_quality), Message::VideoQualityChanged),
+            radio("720p", VideoQuality::P720, Some(self.video_quality), Message::VideoQualityChanged),
+            radio("480p", VideoQuality::P480, Some(self.video_quality), Message::VideoQualityChanged),
+        ]
+        .spacing(8);
+
+        let audio_quality = row![
+            text("Audio").width(Length::Fixed(80.0)),
+            radio("Best", AudioQuality::Best, Some(self.audio_quality), Message::AudioQualityChanged),
+            radio("320k", AudioQuality::K320, Some(self.audio_quality), Message::AudioQualityChanged),
+            radio("192k", AudioQuality::K192, Some(self.audio_quality), Message::AudioQualityChanged),
+            radio("128k", AudioQuality::K128, Some(self.audio_quality), Message::AudioQualityChanged),
+        ]
+        .spacing(8);
+
+        let download_btn = if self.busy {
+            button("Working...")
+        } else {
+            button("Download").on_press(Message::DownloadPressed)
+        };
+
+        let footer_text = if self.dependency_info.is_empty() {
+            self.status.clone()
+        } else {
+            format!("{}\n{}", self.status, self.dependency_info)
+        };
+
+        let body = column![
+            title,
+            provider,
+            url_input,
+            mode_row,
+            video_quality,
+            audio_quality,
+            progress_bar(0.0..=1.0, self.progress),
+            download_btn,
+            text(footer_text)
+                .size(13)
+                .style(theme::Text::Color(Color::from_rgb(0.58, 0.62, 0.70))),
+        ]
+        .spacing(14)
+        .padding(24)
+        .max_width(900);
+
+        container(body)
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .center_x()
+            .center_y()
+            .into()
+    }
+}
