@@ -6,7 +6,7 @@ use iced::futures::SinkExt;
 use iced::subscription;
 use iced::theme::{self, Theme};
 use iced::widget::{button, column, container, progress_bar, radio, row, text, text_input};
-use iced::{Application, Color, Command, Element, Length, Settings, Subscription};
+use iced::{window, Application, Color, Command, Element, Length, Settings, Subscription};
 
 use crate::modules::downloader::application::use_cases::{
     BootstrapDependenciesUseCase, DependencyReport, DownloadMediaUseCase,
@@ -19,7 +19,14 @@ use crate::modules::downloader::infrastructure::save_dialog::NativeSaveDialog;
 use crate::modules::downloader::infrastructure::yt_dlp::YtDlpAdapter;
 
 pub fn run() -> iced::Result {
-    MediaDockApp::run(Settings::default())
+    let settings = Settings {
+        window: window::Settings {
+            size: iced::Size::new(800.0, 680.0),
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+    MediaDockApp::run(settings)
 }
 
 #[derive(Debug, Clone)]
@@ -32,6 +39,7 @@ pub enum Message {
     DownloadPressed,
     DownloadProgressed(DownloadProgress),
     DownloadComplete(Result<(), String>),
+    OpenGithub,
 }
 
 enum WorkerEvent {
@@ -140,6 +148,9 @@ impl Application for MediaDockApp {
                     }
                 }
             }
+            Message::OpenGithub => {
+                let _ = open::that("https://github.com/pausegarra/media-dock");
+            }
         }
         Command::none()
     }
@@ -239,11 +250,26 @@ impl Application for MediaDockApp {
             button("Download").on_press(Message::DownloadPressed)
         };
 
-        let footer_text = if self.dependency_info.is_empty() {
-            self.status.clone()
-        } else {
-            format!("{}\n{}", self.status, self.dependency_info)
-        };
+        let status_text = text(&self.status)
+            .size(13)
+            .style(theme::Text::Color(Color::from_rgb(0.58, 0.62, 0.70)));
+
+        let deps_text = text(&self.dependency_info)
+            .size(12)
+            .style(theme::Text::Color(Color::from_rgb(0.45, 0.55, 0.65)));
+
+        let developer_info = row![
+            text("developed by Pau Segarra").size(12),
+            button("Github").on_press(Message::OpenGithub).padding(0),
+        ]
+        .spacing(6);
+
+        let footer = row![
+            column![status_text, deps_text].spacing(2),
+            row![].width(Length::Fill),
+            developer_info,
+        ]
+        .align_items(iced::Alignment::End);
 
         let body = column![
             title,
@@ -254,12 +280,10 @@ impl Application for MediaDockApp {
             audio_quality,
             progress_bar(0.0..=1.0, self.progress),
             download_btn,
-            text(footer_text)
-                .size(13)
-                .style(theme::Text::Color(Color::from_rgb(0.58, 0.62, 0.70))),
+            footer,
         ]
         .spacing(14)
-        .padding(24)
+        .padding([24, 24, 32, 24])
         .max_width(900);
 
         container(body)
