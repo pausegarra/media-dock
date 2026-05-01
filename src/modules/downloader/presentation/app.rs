@@ -19,11 +19,16 @@ use crate::modules::downloader::infrastructure::save_dialog::NativeSaveDialog;
 use crate::modules::downloader::infrastructure::yt_dlp::YtDlpAdapter;
 
 static LOGO_SVG: &[u8] = include_bytes!("assets/logo.svg");
+static ICON_PNG: &[u8] = include_bytes!("assets/icon.png");
 
 pub fn run() -> iced::Result {
+    let icon = window::icon::from_file_data(ICON_PNG, None)
+        .expect("failed to load app icon");
+
     let settings = Settings {
         window: window::Settings {
             size: iced::Size::new(800.0, 740.0),
+            icon: Some(icon),
             ..Default::default()
         },
         ..Default::default()

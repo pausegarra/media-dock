@@ -2,6 +2,7 @@
 name = "media-dock"
 version = "0.1.0"
 edition = "2024"
+build = "build.rs"
 
 [dependencies]
 iced = { version = "0.12", features = ["tokio", "image", "svg"] }
@@ -9,3 +10,13 @@ rfd = "0.14"
 open = "5"
 serde = { version = "1", features = ["derive"] }
 thiserror = "1"
+
+[target.'cfg(windows)'.build-dependencies]
+winres = "0.1"
+
+[package.metadata.bundle]
+name = "Media Dock"
+identifier = "com.pausegarra.media-dock"
+icon = ["assets/icons/macos/AppIcon.icns"]
+osx_minimum_system_version = "10.15"
+category = "Utility"
