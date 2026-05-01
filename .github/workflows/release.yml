@@ -138,3 +138,29 @@ jobs:
         env:
           ARTIFACT_NAME: media-dock-${{ matrix.asset_suffix }}.${{ matrix.archive }}
         run: rm -f "${ARTIFACT_NAME}"
+
+  cleanup:
+    name: Cleanup pipeline artifacts
+    needs: [build]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete icon artifact
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.runId,
+            });
+            for (const artifact of artifacts.data.artifacts) {
+              if (artifact.name === 'app-icons') {
+                await github.rest.actions.deleteArtifact({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  artifact_id: artifact.id,
+                });
+                console.log(`Deleted artifact: ${artifact.name}`);
+              }
+            }
