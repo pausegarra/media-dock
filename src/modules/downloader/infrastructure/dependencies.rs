@@ -198,8 +198,26 @@ fn install_local_yt_dlp() -> Result<(), DownloaderError> {
 }
 
 fn local_bin_dir() -> PathBuf {
-    let home = env::var("HOME").unwrap_or_else(|_| ".".to_string());
-    Path::new(&home).join(".media-dock").join("bin")
+    home_dir().join(".media-dock")
+}
+
+fn home_dir() -> PathBuf {
+    #[cfg(target_os = "windows")]
+    {
+        if let Ok(user_profile) = env::var("USERPROFILE") {
+            return PathBuf::from(user_profile);
+        }
+
+        if let (Ok(home_drive), Ok(home_path)) = (env::var("HOMEDRIVE"), env::var("HOMEPATH")) {
+            return PathBuf::from(format!("{home_drive}{home_path}"));
+        }
+    }
+
+    if let Ok(home) = env::var("HOME") {
+        return PathBuf::from(home);
+    }
+
+    PathBuf::from(".")
 }
 
 fn local_yt_dlp_path() -> PathBuf {
