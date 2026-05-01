@@ -11,6 +11,29 @@ use super::dependencies::yt_dlp_command;
 
 pub struct YtDlpAdapter;
 
+fn get_title_impl(url: &str) -> Result<String, DownloaderError> {
+    let output = std::process::Command::new(yt_dlp_command())
+        .args(["--flat-playlist", "--print", "%(title)s", url])
+        .output()
+        .map_err(|e| DownloaderError::ProcessFailed(e.to_string()))?;
+
+    if !output.status.success() {
+        return Err(DownloaderError::ProcessFailed(
+            String::from_utf8_lossy(&output.stderr).to_string(),
+        ));
+    }
+
+    let title = String::from_utf8_lossy(&output.stdout)
+        .trim()
+        .to_string();
+
+    if title.is_empty() {
+        return Err(DownloaderError::ProcessFailed("empty title".to_string()));
+    }
+
+    Ok(title)
+}
+
 impl DownloadPort for YtDlpAdapter {
     fn run_download(
         &self,
@@ -89,6 +112,10 @@ impl DownloadPort for YtDlpAdapter {
             )))
         }
     }
+
+    fn get_title(&self, url: &str) -> Result<String, DownloaderError> {
+        get_title_impl(url)
+    }
 }
 
 fn video_audio_format(video: VideoQuality, audio: AudioQuality, preset: DownloadPreset) -> String {
@@ -143,7 +170,7 @@ fn audio_quality_value(audio: AudioQuality) -> &'static str {
     }
 }
 
-fn parse_progress(line: &str) -> Option<f32> {
+pub fn parse_progress(line: &str) -> Option<f32> {
     let marker = "[download]";
     if !line.contains(marker) || !line.contains('%') {
         return None;
@@ -153,15 +180,4 @@ fn parse_progress(line: &str) -> Option<f32> {
     let num = prefix.split_whitespace().last()?;
     let val: f32 = num.parse().ok()?;
     Some((val / 100.0).clamp(0.0, 1.0))
-}
-
-#[cfg(test)]
-mod tests {
-    use super::parse_progress;
-
-    #[test]
-    fn parses_percentage_line() {
-        let p = parse_progress("[download]  42.4% of 12.01MiB at 2.11MiB/s ETA 00:04").unwrap();
-        assert!(p > 0.42 && p < 0.43);
-    }
 }
