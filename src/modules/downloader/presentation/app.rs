@@ -1,11 +1,11 @@
 use std::sync::Arc;
 
-use iced::alignment::Horizontal;
 use iced::executor;
 use iced::futures::SinkExt;
 use iced::subscription;
 use iced::theme::{self, Theme};
 use iced::widget::{button, column, container, progress_bar, radio, row, text, text_input};
+use iced::widget::svg::{Svg, Handle};
 use iced::{window, Application, Color, Command, Element, Length, Settings, Subscription};
 
 use crate::modules::downloader::application::use_cases::{
@@ -18,10 +18,12 @@ use crate::modules::downloader::infrastructure::dependencies::SystemDependencies
 use crate::modules::downloader::infrastructure::save_dialog::NativeSaveDialog;
 use crate::modules::downloader::infrastructure::yt_dlp::YtDlpAdapter;
 
+static LOGO_SVG: &[u8] = include_bytes!("assets/logo.svg");
+
 pub fn run() -> iced::Result {
     let settings = Settings {
         window: window::Settings {
-            size: iced::Size::new(800.0, 680.0),
+            size: iced::Size::new(800.0, 740.0),
             ..Default::default()
         },
         ..Default::default()
@@ -197,9 +199,14 @@ impl Application for MediaDockApp {
     }
 
     fn view(&self) -> Element<'_, Message> {
-        let title = text("MediaDock")
-            .size(44)
-            .horizontal_alignment(Horizontal::Center);
+        let logo = Svg::new(Handle::from_memory(&*LOGO_SVG))
+            .width(Length::Fixed(480.0))
+            .height(Length::Fixed(240.0));
+
+        let title = container(logo)
+            .width(Length::Fill)
+            .center_x()
+            .padding([0, 0, 2, 0]);
 
         let provider = container(text("YouTube").size(18))
             .padding(10)
