@@ -1,4 +1,4 @@
-<img src="src/modules/downloader/presentation/assets/logo.svg" width="400" alt="Media Dock Logo">
+<img src="src/modules/downloader/presentation/assets/logo.svg" width="400" alt="Media Dock Logo" style="display:block;margin-left:auto;margin-right:auto;">
 
 # Media Dock
 
