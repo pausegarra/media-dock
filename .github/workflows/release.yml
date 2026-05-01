@@ -1,0 +1,116 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  validate-tag:
+    name: Validate SemVer tag
+    runs-on: ubuntu-latest
+    steps:
+      - name: Reject non SemVer tags
+        shell: bash
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          if [[ ! "${TAG}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Tag '${TAG}' does not match MAJOR.MINOR.PATCH"
+            exit 1
+          fi
+
+  create-release:
+    name: Create draft release
+    needs: [validate-tag]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create GitHub release (draft)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --title "${GITHUB_REF_NAME}" \
+            --draft
+
+  build:
+    name: Build ${{ matrix.asset_name }}
+    needs: [create-release]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            rust_target: x86_64-unknown-linux-gnu
+            asset_suffix: linux-x86_64
+            archive: tar.gz
+
+          - runner: macos-13
+            rust_target: x86_64-apple-darwin
+            asset_suffix: macos-x86_64
+            archive: tar.gz
+
+          - runner: macos-latest
+            rust_target: aarch64-apple-darwin
+            asset_suffix: macos-arm64
+            archive: tar.gz
+
+          - runner: windows-latest
+            rust_target: x86_64-pc-windows-msvc
+            asset_suffix: windows-x86_64
+            archive: zip
+
+        asset_name:
+          - media-dock-${{ matrix.asset_suffix }}.${{ matrix.archive }}
+
+    runs-on: ${{ matrix.runner }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust_target }}
+
+      - name: Build release binary
+        run: cargo build --release --target ${{ matrix.rust_target }}
+
+      - name: Create archive (unix)
+        if: matrix.archive != 'zip'
+        shell: bash
+        env:
+          ARTIFACT_NAME: ${{ matrix.asset_name }}
+        run: |
+          cd "target/${{ matrix.rust_target }}/release"
+          tar -czf "../../../${ARTIFACT_NAME}" "media-dock"
+
+      - name: Create archive (windows)
+        if: matrix.archive == 'zip'
+        shell: powershell
+        env:
+          ARTIFACT_NAME: ${{ matrix.asset_name }}
+        run: |
+          Compress-Archive -Path "target/${{ matrix.rust_target }}/release/media-dock.exe" -DestinationPath "${ARTIFACT_NAME}"
+
+      - name: Upload asset to draft release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ARTIFACT_NAME: ${{ matrix.asset_name }}
+        run: |
+          gh release upload "${GITHUB_REF_NAME}" \
+            "${ARTIFACT_NAME}" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --clobber
+
+      - name: Remove generated archive
+        if: always()
+        shell: bash
+        env:
+          ARTIFACT_NAME: ${{ matrix.asset_name }}
+        run: rm -f "${ARTIFACT_NAME}"
