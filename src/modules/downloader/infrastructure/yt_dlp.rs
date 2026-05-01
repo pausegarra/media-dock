@@ -2,7 +2,7 @@ use std::io::{BufRead, BufReader};
 use std::process::{Command, Stdio};
 
 use crate::modules::downloader::domain::entities::{
-    AudioQuality, DownloadMode, DownloadProgress, DownloadRequest, VideoQuality,
+    AudioQuality, DownloadMode, DownloadPreset, DownloadProgress, DownloadRequest, VideoQuality,
 };
 use crate::modules::downloader::domain::errors::DownloaderError;
 use crate::modules::downloader::domain::ports::DownloadPort;
@@ -48,8 +48,9 @@ impl DownloadPort for YtDlpAdapter {
                 cmd.arg("-f").arg(video_audio_format(
                     request.video_quality,
                     request.audio_quality,
+                    request.preset,
                 ));
-                cmd.args(["--merge-output-format", "mp4"]);
+                cmd.args(["--merge-output-format", merge_format(request.preset)]);
             }
         }
 
@@ -90,7 +91,7 @@ impl DownloadPort for YtDlpAdapter {
     }
 }
 
-fn video_audio_format(video: VideoQuality, audio: AudioQuality) -> String {
+fn video_audio_format(video: VideoQuality, audio: AudioQuality, preset: DownloadPreset) -> String {
     let v = match video {
         VideoQuality::Best => "bestvideo",
         VideoQuality::P1080 => "bestvideo[height<=1080]",
@@ -103,7 +104,34 @@ fn video_audio_format(video: VideoQuality, audio: AudioQuality) -> String {
         AudioQuality::K192 => "bestaudio[abr<=192]",
         AudioQuality::K128 => "bestaudio[abr<=128]",
     };
-    format!("{v}+{a}/best")
+
+    match preset {
+        DownloadPreset::Compatibility => {
+            let v_compat = match video {
+                VideoQuality::Best => "bestvideo[ext=mp4][vcodec^=avc1]",
+                VideoQuality::P1080 => "bestvideo[ext=mp4][vcodec^=avc1][height<=1080]",
+                VideoQuality::P720 => "bestvideo[ext=mp4][vcodec^=avc1][height<=720]",
+                VideoQuality::P480 => "bestvideo[ext=mp4][vcodec^=avc1][height<=480]",
+            };
+            let a_compat = match audio {
+                AudioQuality::Best => "bestaudio[ext=m4a]",
+                AudioQuality::K320 => "bestaudio[ext=m4a][abr<=320]",
+                AudioQuality::K192 => "bestaudio[ext=m4a][abr<=192]",
+                AudioQuality::K128 => "bestaudio[ext=m4a][abr<=128]",
+            };
+            format!("{v_compat}+{a_compat}/{v}+{a}/best[ext=mp4]/best")
+        }
+        DownloadPreset::MaxQuality => {
+            format!("{v}+{a}/best")
+        }
+    }
+}
+
+fn merge_format(preset: DownloadPreset) -> &'static str {
+    match preset {
+        DownloadPreset::Compatibility => "mp4",
+        DownloadPreset::MaxQuality => "mkv",
+    }
 }
 
 fn audio_quality_value(audio: AudioQuality) -> &'static str {

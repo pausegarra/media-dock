@@ -10,6 +10,18 @@ pub enum DownloadMode {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DownloadPreset {
+    Compatibility,
+    MaxQuality,
+}
+
+impl Default for DownloadPreset {
+    fn default() -> Self {
+        Self::Compatibility
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum VideoQuality {
     Best,
     P1080,
@@ -29,6 +41,7 @@ pub enum AudioQuality {
 pub struct DownloadRequest {
     pub provider: Provider,
     pub mode: DownloadMode,
+    pub preset: DownloadPreset,
     pub video_quality: VideoQuality,
     pub audio_quality: AudioQuality,
     pub url: String,
