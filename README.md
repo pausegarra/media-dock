@@ -29,6 +29,20 @@ cargo test
 cargo check
 ```
 
+## Icon & Packaging Assets
+
+Source icon: `src/modules/downloader/presentation/assets/icon.png`
+
+Generate platform icon assets:
+```bash
+./scripts/generate-icons.sh
+```
+
+Outputs:
+- macOS: `assets/icons/macos/AppIcon.icns`
+- Windows: `assets/icons/windows/app.ico`
+- Linux: `assets/icons/linux/hicolor/*/apps/media-dock.png`
+
 ## Architecture
 
 Single module: `modules/downloader/` following Clean Architecture:
