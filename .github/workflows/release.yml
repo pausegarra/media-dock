@@ -36,9 +36,30 @@ jobs:
             --title "${GITHUB_REF_NAME}" \
             --draft
 
+  generate-icons:
+    name: Generate icons
+    needs: [create-release]
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Pillow
+        run: pip3 install Pillow
+
+      - name: Generate icons
+        run: bash scripts/generate-icons.sh
+
+      - name: Upload generated assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-icons
+          path: assets/
+          retention-days: 1
+
   build:
     name: Build ${{ matrix.asset_suffix }}
-    needs: [create-release]
+    needs: [generate-icons]
     strategy:
       fail-fast: false
       matrix:
@@ -68,6 +89,12 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Download generated icons
+        uses: actions/download-artifact@v4
+        with:
+          name: app-icons
+          path: assets/
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
