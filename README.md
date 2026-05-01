@@ -5,14 +5,14 @@ A Rust desktop application for downloading media using `yt-dlp` with FFmpeg for 
 ## Features
 
 - Download media from various video platforms via `yt-dlp`
-- Bundled FFmpeg for audio/video encoding
+- Auto-installed FFmpeg for audio/video encoding
 - Cross-platform support (macOS, Linux, Windows)
 - Clean Architecture design
 
 ## Requirements
 
 - Rust toolchain supporting **edition 2024**
-- FFmpeg/FFprobe (bundled for each platform in `bin/`)
+- FFmpeg/FFprobe (auto-installed to `~/.media-dock/bin/` if not on PATH)
 - `yt-dlp` (auto-installed to `~/.media-dock/bin/` if not on PATH)
 
 ## Build & Run
@@ -66,5 +66,5 @@ GitHub Actions runs on macOS, Ubuntu, and Windows with the workflow:
 
 | Tool | Location |
 |------|----------|
-| FFmpeg/FFprobe | `bin/{macos,linux,windows}/` |
+| FFmpeg/FFprobe | `~/.media-dock/bin/` (auto-installed) |
 | yt-dlp | `~/.media-dock/bin/` (auto-installed) |
