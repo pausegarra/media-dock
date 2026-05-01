@@ -1,3 +1,5 @@
+<img src="src/modules/downloader/presentation/assets/logo.svg" width="400" alt="Media Dock Logo">
+
 # Media Dock
 
 A Rust desktop application for downloading media using `yt-dlp` with FFmpeg for cross-platform encoding.
