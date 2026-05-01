@@ -306,12 +306,15 @@ impl Application for MediaDockApp {
         ]
         .spacing(6);
 
-        let footer = row![
-            deps_text,
-            row![].width(Length::Fill),
-            developer_info,
+        let version_text = text(format!("v{}", env!("CARGO_PKG_VERSION")))
+            .size(12)
+            .style(theme::Text::Color(Color::from_rgb(0.45, 0.55, 0.65)));
+
+        let footer = column![
+            row![deps_text],
+            row![version_text, row![].width(Length::Fill), developer_info],
         ]
-        .align_items(iced::Alignment::End);
+        .align_items(iced::Alignment::Start);
 
         let body = column![
             title,
