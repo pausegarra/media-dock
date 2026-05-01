@@ -37,7 +37,7 @@ jobs:
             --draft
 
   build:
-    name: Build ${{ matrix.asset_name }}
+    name: Build ${{ matrix.asset_suffix }}
     needs: [create-release]
     strategy:
       fail-fast: false
@@ -63,9 +63,6 @@ jobs:
             asset_suffix: windows-x86_64
             archive: zip
 
-        asset_name:
-          - media-dock-${{ matrix.asset_suffix }}.${{ matrix.archive }}
-
     runs-on: ${{ matrix.runner }}
 
     steps:
@@ -84,7 +81,7 @@ jobs:
         if: matrix.archive != 'zip'
         shell: bash
         env:
-          ARTIFACT_NAME: ${{ matrix.asset_name }}
+          ARTIFACT_NAME: media-dock-${{ matrix.asset_suffix }}.${{ matrix.archive }}
         run: |
           cd "target/${{ matrix.rust_target }}/release"
           tar -czf "../../../${ARTIFACT_NAME}" "media-dock"
@@ -93,7 +90,7 @@ jobs:
         if: matrix.archive == 'zip'
         shell: powershell
         env:
-          ARTIFACT_NAME: ${{ matrix.asset_name }}
+          ARTIFACT_NAME: media-dock-${{ matrix.asset_suffix }}.${{ matrix.archive }}
         run: |
           Compress-Archive -Path "target/${{ matrix.rust_target }}/release/media-dock.exe" -DestinationPath "${ARTIFACT_NAME}"
 
@@ -101,7 +98,7 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          ARTIFACT_NAME: ${{ matrix.asset_name }}
+          ARTIFACT_NAME: media-dock-${{ matrix.asset_suffix }}.${{ matrix.archive }}
         run: |
           gh release upload "${GITHUB_REF_NAME}" \
             "${ARTIFACT_NAME}" \
@@ -112,5 +109,5 @@ jobs:
         if: always()
         shell: bash
         env:
-          ARTIFACT_NAME: ${{ matrix.asset_name }}
+          ARTIFACT_NAME: media-dock-${{ matrix.asset_suffix }}.${{ matrix.archive }}
         run: rm -f "${ARTIFACT_NAME}"
