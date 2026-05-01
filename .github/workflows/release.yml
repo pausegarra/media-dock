@@ -89,10 +89,9 @@ jobs:
       - name: Create archive (windows)
         if: matrix.archive == 'zip'
         shell: powershell
-        env:
-          ARTIFACT_NAME: media-dock-${{ matrix.asset_suffix }}.${{ matrix.archive }}
         run: |
-          Compress-Archive -Path "target/${{ matrix.rust_target }}/release/media-dock.exe" -DestinationPath "${ARTIFACT_NAME}"
+          $name = "media-dock-${{ matrix.asset_suffix }}.${{ matrix.archive }}"
+          Compress-Archive -Path "target/${{ matrix.rust_target }}/release/media-dock.exe" -DestinationPath "$name"
 
       - name: Upload asset to draft release
         shell: bash
@@ -105,9 +104,16 @@ jobs:
             --repo "${GITHUB_REPOSITORY}" \
             --clobber
 
-      - name: Remove generated archive
-        if: always()
+      - name: Remove generated archive (unix)
+        if: always() && matrix.archive != 'zip'
         shell: bash
         env:
           ARTIFACT_NAME: media-dock-${{ matrix.asset_suffix }}.${{ matrix.archive }}
         run: rm -f "${ARTIFACT_NAME}"
+
+      - name: Remove generated archive (windows)
+        if: always() && matrix.archive == 'zip'
+        shell: powershell
+        run: |
+          $name = "media-dock-${{ matrix.asset_suffix }}.${{ matrix.archive }}"
+          Remove-Item -Path "$name" -Force -ErrorAction SilentlyContinue
