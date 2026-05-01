@@ -68,9 +68,11 @@ impl DownloadMediaUseCase {
         let ffmpeg_path = self.dependency_port.ensure_ffmpeg()?;
         self.dependency_port.ensure_ffprobe()?;
 
+        let title = self.download_port.get_title(&request.url).unwrap_or_default();
+
         let out = self
             .save_dialog_port
-            .choose_output_file(request.mode, request.preset)
+            .choose_output_file(request.mode, request.preset, &title)
             .ok_or(DownloaderError::SaveCanceled)?;
         request.output_path = out;
 

@@ -23,7 +23,12 @@ impl DependencyPort for OkDeps {
 
 struct FakeDialog;
 impl SaveDialogPort for FakeDialog {
-    fn choose_output_file(&self, _mode: DownloadMode, _preset: DownloadPreset) -> Option<String> {
+    fn choose_output_file(
+        &self,
+        _mode: DownloadMode,
+        _preset: DownloadPreset,
+        _title: &str,
+    ) -> Option<String> {
         Some("/tmp/out.mp4".to_string())
     }
 }
@@ -41,6 +46,10 @@ impl DownloadPort for FakeDownload {
             message: "Finished".to_string(),
         });
         Ok(())
+    }
+
+    fn get_title(&self, _url: &str) -> Result<String, DownloaderError> {
+        Ok("Test Video Title".to_string())
     }
 }
 

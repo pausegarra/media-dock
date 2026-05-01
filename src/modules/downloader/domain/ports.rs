@@ -8,7 +8,12 @@ pub trait DependencyPort: Send + Sync {
 }
 
 pub trait SaveDialogPort: Send + Sync {
-    fn choose_output_file(&self, mode: DownloadMode, preset: DownloadPreset) -> Option<String>;
+    fn choose_output_file(
+        &self,
+        mode: DownloadMode,
+        preset: DownloadPreset,
+        url: &str,
+    ) -> Option<String>;
 }
 
 pub trait DownloadPort: Send + Sync {
@@ -18,4 +23,6 @@ pub trait DownloadPort: Send + Sync {
         ffmpeg_path: &str,
         on_progress: &mut dyn FnMut(DownloadProgress),
     ) -> Result<(), DownloaderError>;
+
+    fn get_title(&self, url: &str) -> Result<String, DownloaderError>;
 }
