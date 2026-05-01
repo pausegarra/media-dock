@@ -36,30 +36,9 @@ jobs:
             --title "${GITHUB_REF_NAME}" \
             --draft
 
-  generate-icons:
-    name: Generate icons
-    needs: [create-release]
-    runs-on: macos-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install Pillow
-        run: pip3 install Pillow
-
-      - name: Generate icons
-        run: bash scripts/generate-icons.sh
-
-      - name: Upload generated assets
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-icons
-          path: assets/
-          retention-days: 1
-
   build:
     name: Build ${{ matrix.asset_suffix }}
-    needs: [generate-icons]
+    needs: [create-release]
     strategy:
       fail-fast: false
       matrix:
@@ -89,12 +68,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Download generated icons
-        uses: actions/download-artifact@v4
-        with:
-          name: app-icons
-          path: assets/
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -138,29 +111,3 @@ jobs:
         env:
           ARTIFACT_NAME: media-dock-${{ matrix.asset_suffix }}.${{ matrix.archive }}
         run: rm -f "${ARTIFACT_NAME}"
-
-  cleanup:
-    name: Cleanup pipeline artifacts
-    needs: [build]
-    if: always()
-    runs-on: ubuntu-latest
-    steps:
-      - name: Delete icon artifact
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              run_id: context.runId,
-            });
-            for (const artifact of artifacts.data.artifacts) {
-              if (artifact.name === 'app-icons') {
-                await github.rest.actions.deleteArtifact({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  artifact_id: artifact.id,
-                });
-                console.log(`Deleted artifact: ${artifact.name}`);
-              }
-            }
