@@ -48,7 +48,7 @@ jobs:
             asset_suffix: linux-x86_64
             archive: tar.gz
 
-          - runner: macos-13
+          - runner: macos-15-intel
             rust_target: x86_64-apple-darwin
             asset_suffix: macos-x86_64
             archive: tar.gz
