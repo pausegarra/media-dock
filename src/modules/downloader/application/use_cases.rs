@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::modules::downloader::domain::entities::{DownloadMode, DownloadProgress, DownloadRequest};
+use crate::modules::downloader::domain::entities::{DownloadProgress, DownloadRequest};
 use crate::modules::downloader::domain::errors::DownloaderError;
 use crate::modules::downloader::domain::ports::{DependencyPort, DownloadPort, SaveDialogPort};
 use crate::modules::downloader::domain::value_objects::YoutubeUrl;
@@ -70,7 +70,7 @@ impl DownloadMediaUseCase {
 
         let out = self
             .save_dialog_port
-            .choose_output_file(request.mode == DownloadMode::AudioOnlyMp3)
+            .choose_output_file(request.mode, request.preset)
             .ok_or(DownloaderError::SaveCanceled)?;
         request.output_path = out;
 

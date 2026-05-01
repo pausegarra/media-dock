@@ -2,7 +2,8 @@ use std::sync::Arc;
 
 use media_dock::modules::downloader::application::use_cases::DownloadMediaUseCase;
 use media_dock::modules::downloader::domain::entities::{
-    AudioQuality, DownloadMode, DownloadProgress, DownloadRequest, Provider, VideoQuality,
+    AudioQuality, DownloadMode, DownloadPreset, DownloadProgress, DownloadRequest, Provider,
+    VideoQuality,
 };
 use media_dock::modules::downloader::domain::errors::DownloaderError;
 use media_dock::modules::downloader::domain::ports::{DependencyPort, DownloadPort, SaveDialogPort};
@@ -22,7 +23,7 @@ impl DependencyPort for OkDeps {
 
 struct FakeDialog;
 impl SaveDialogPort for FakeDialog {
-    fn choose_output_file(&self, _audio_only: bool) -> Option<String> {
+    fn choose_output_file(&self, _mode: DownloadMode, _preset: DownloadPreset) -> Option<String> {
         Some("/tmp/out.mp4".to_string())
     }
 }
@@ -49,6 +50,7 @@ fn rejects_invalid_url() {
     let request = DownloadRequest {
         provider: Provider::YouTube,
         mode: DownloadMode::VideoWithAudio,
+        preset: DownloadPreset::Compatibility,
         video_quality: VideoQuality::Best,
         audio_quality: AudioQuality::Best,
         url: "https://example.com/not-youtube".to_string(),

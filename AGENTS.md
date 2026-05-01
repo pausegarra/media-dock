@@ -1,6 +1,6 @@
 # Media Dock
 
-Rust desktop app using [iced](https://iced.rs/) GUI framework. Downloads media via `yt-dlp`, with FFmpeg bundled in `bin/` for cross-platform encoding.
+Rust desktop app using [iced](https://iced.rs/) GUI framework. Downloads media via `yt-dlp`, with FFmpeg auto-installed at startup for cross-platform encoding.
 
 ## Build & Run
 
@@ -23,7 +23,7 @@ Entry point: `src/main.rs` calls `media_dock::modules::downloader::presentation:
 
 ## Dependencies
 
-The app bundles FFmpeg/FFprobe in `bin/` with platform-specific subdirs (`macos/`, `linux/`, `windows/`). It also auto-installs `yt-dlp` to `~/.media-dock/bin/` if not found on PATH.
+The app auto-installs FFmpeg/FFprobe and `yt-dlp` to `~/.media-dock/bin/` when not found on PATH.
 
 ## Tests
 

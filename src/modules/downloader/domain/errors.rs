@@ -6,9 +6,9 @@ pub enum DownloaderError {
     InvalidUrl,
     #[error("yt-dlp not available")]
     YtDlpUnavailable,
-    #[error("ffmpeg bundle not found")]
+    #[error("ffmpeg not available")]
     FfmpegUnavailable,
-    #[error("ffprobe bundle not found")]
+    #[error("ffprobe not available")]
     FfprobeUnavailable,
     #[error("download canceled")]
     SaveCanceled,

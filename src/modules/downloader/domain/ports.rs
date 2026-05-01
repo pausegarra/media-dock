@@ -1,4 +1,4 @@
-use super::entities::{DownloadProgress, DownloadRequest};
+use super::entities::{DownloadMode, DownloadPreset, DownloadProgress, DownloadRequest};
 use super::errors::DownloaderError;
 
 pub trait DependencyPort: Send + Sync {
@@ -8,7 +8,7 @@ pub trait DependencyPort: Send + Sync {
 }
 
 pub trait SaveDialogPort: Send + Sync {
-    fn choose_output_file(&self, audio_only: bool) -> Option<String>;
+    fn choose_output_file(&self, mode: DownloadMode, preset: DownloadPreset) -> Option<String>;
 }
 
 pub trait DownloadPort: Send + Sync {

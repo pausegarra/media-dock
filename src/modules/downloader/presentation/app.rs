@@ -12,7 +12,8 @@ use crate::modules::downloader::application::use_cases::{
     BootstrapDependenciesUseCase, DependencyReport, DownloadMediaUseCase,
 };
 use crate::modules::downloader::domain::entities::{
-    AudioQuality, DownloadMode, DownloadProgress, DownloadRequest, Provider, VideoQuality,
+    AudioQuality, DownloadMode, DownloadPreset, DownloadProgress, DownloadRequest, Provider,
+    VideoQuality,
 };
 use crate::modules::downloader::infrastructure::dependencies::SystemDependencies;
 use crate::modules::downloader::infrastructure::save_dialog::NativeSaveDialog;
@@ -27,7 +28,7 @@ pub fn run() -> iced::Result {
 
     let settings = Settings {
         window: window::Settings {
-            size: iced::Size::new(800.0, 740.0),
+            size: iced::Size::new(800.0, 800.0),
             icon: Some(icon),
             ..Default::default()
         },
@@ -40,6 +41,7 @@ pub fn run() -> iced::Result {
 pub enum Message {
     UrlChanged(String),
     ModeChanged(DownloadMode),
+    PresetChanged(DownloadPreset),
     VideoQualityChanged(VideoQuality),
     AudioQualityChanged(AudioQuality),
     BootstrapComplete(Result<DependencyReport, String>),
@@ -57,6 +59,7 @@ enum WorkerEvent {
 pub struct MediaDockApp {
     url: String,
     mode: DownloadMode,
+    preset: DownloadPreset,
     video_quality: VideoQuality,
     audio_quality: AudioQuality,
     progress: f32,
@@ -76,6 +79,7 @@ impl Application for MediaDockApp {
         let app = Self {
             url: String::new(),
             mode: DownloadMode::VideoWithAudio,
+            preset: DownloadPreset::Compatibility,
             video_quality: VideoQuality::Best,
             audio_quality: AudioQuality::Best,
             progress: 0.0,
@@ -109,6 +113,7 @@ impl Application for MediaDockApp {
         match message {
             Message::UrlChanged(v) => self.url = v,
             Message::ModeChanged(v) => self.mode = v,
+            Message::PresetChanged(v) => self.preset = v,
             Message::VideoQualityChanged(v) => self.video_quality = v,
             Message::AudioQualityChanged(v) => self.audio_quality = v,
             Message::BootstrapComplete(res) => {
@@ -132,6 +137,7 @@ impl Application for MediaDockApp {
                 self.pending_request = Some(DownloadRequest {
                     provider: Provider::YouTube,
                     mode: self.mode,
+                    preset: self.preset,
                     video_quality: self.video_quality,
                     audio_quality: self.audio_quality,
                     url: self.url.clone(),
@@ -238,6 +244,27 @@ impl Application for MediaDockApp {
         ]
         .spacing(16);
 
+        let preset_row = if self.mode == DownloadMode::VideoWithAudio {
+            row![
+                text("Preset").width(Length::Fixed(80.0)),
+                radio(
+                    "Compatibility (H.264/AAC)",
+                    DownloadPreset::Compatibility,
+                    Some(self.preset),
+                    Message::PresetChanged
+                ),
+                radio(
+                    "Max Quality",
+                    DownloadPreset::MaxQuality,
+                    Some(self.preset),
+                    Message::PresetChanged
+                ),
+            ]
+            .spacing(8)
+        } else {
+            row![]
+        };
+
         let video_quality = row![
             text("Video").width(Length::Fixed(80.0)),
             radio("Best", VideoQuality::Best, Some(self.video_quality), Message::VideoQualityChanged),
@@ -263,8 +290,11 @@ impl Application for MediaDockApp {
         };
 
         let status_text = text(&self.status)
-            .size(13)
-            .style(theme::Text::Color(Color::from_rgb(0.58, 0.62, 0.70)));
+            .size(16)
+            .font(iced::Font {
+                weight: iced::font::Weight::Bold,
+                ..iced::Font::DEFAULT
+            });
 
         let deps_text = text(&self.dependency_info)
             .size(12)
@@ -277,7 +307,7 @@ impl Application for MediaDockApp {
         .spacing(6);
 
         let footer = row![
-            column![status_text, deps_text].spacing(2),
+            deps_text,
             row![].width(Length::Fill),
             developer_info,
         ]
@@ -288,8 +318,10 @@ impl Application for MediaDockApp {
             provider,
             url_input,
             mode_row,
+            preset_row,
             video_quality,
             audio_quality,
+            status_text,
             progress_bar(0.0..=1.0, self.progress),
             download_btn,
             footer,
