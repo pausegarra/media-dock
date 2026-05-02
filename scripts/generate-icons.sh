@@ -53,13 +53,11 @@ done
 python3 - <<PY
 from PIL import Image
 src = Image.open("$SOURCE_PNG").convert("RGBA")
-sizes = [16, 24, 32, 48, 64, 128, 256]
-frames = [src.resize((s, s), Image.LANCZOS) for s in sizes]
-frames[0].save(
+sizes = [(16,16), (24,24), (32,32), (48,48), (64,64), (128,128), (256,256)]
+src.save(
     "$WIN_ICO",
     format="ICO",
-    sizes=[(s, s) for s in sizes],
-    append_images=frames[1:],
+    sizes=sizes,
 )
 PY
 
