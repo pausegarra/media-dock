@@ -1,4 +1,4 @@
-# Media Dock
+# Pullryn
 
 Rust desktop app using [iced](https://iced.rs/) GUI framework. Downloads media via `yt-dlp`, with FFmpeg auto-installed at startup for cross-platform encoding.
 
@@ -19,11 +19,11 @@ Single module: `modules/downloader/` — Clean Architecture with:
 - `infrastructure/` — adapters (yt_dlp, save_dialog, dependencies)
 - `presentation/` — iced UI
 
-Entry point: `src/main.rs` calls `media_dock::modules::downloader::presentation::app::run()`.
+Entry point: `src/main.rs` calls `pullryn::modules::downloader::presentation::app::run()`.
 
 ## Dependencies
 
-The app auto-installs FFmpeg/FFprobe and `yt-dlp` to `~/.media-dock/bin/` when not found on PATH.
+The app auto-installs FFmpeg/FFprobe and `yt-dlp` to `~/.pullryn/bin/` when not found on PATH.
 
 ## Tests
 

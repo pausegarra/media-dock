@@ -1,6 +1,6 @@
-<img src="src/modules/downloader/presentation/assets/logo.svg" width="400" alt="Media Dock Logo" style="display:block;margin-left:auto;margin-right:auto;">
+<img src="src/modules/downloader/presentation/assets/logo.svg" width="400" alt="Pullryn Logo" style="display:block;margin-left:auto;margin-right:auto;">
 
-# Media Dock
+# Pullryn
 
 A Rust desktop application for downloading media using `yt-dlp` with FFmpeg for cross-platform encoding.
 
@@ -14,8 +14,8 @@ A Rust desktop application for downloading media using `yt-dlp` with FFmpeg for 
 ## Requirements
 
 - Rust toolchain supporting **edition 2024**
-- FFmpeg/FFprobe (auto-installed to `~/.media-dock/bin/` if not on PATH)
-- `yt-dlp` (auto-installed to `~/.media-dock/bin/` if not on PATH)
+- FFmpeg/FFprobe (auto-installed to `~/.pullryn/bin/` if not on PATH)
+- `yt-dlp` (auto-installed to `~/.pullryn/bin/` if not on PATH)
 
 ## Build & Run
 
@@ -43,7 +43,7 @@ Generate platform icon assets:
 Outputs:
 - macOS: `assets/icons/macos/AppIcon.icns`
 - Windows: `assets/icons/windows/app.ico`
-- Linux: `assets/icons/linux/hicolor/*/apps/media-dock.png`
+- Linux: `assets/icons/linux/hicolor/*/apps/pullryn.png`
 
 ## Architecture
 
@@ -57,7 +57,7 @@ modules/downloader/
 └── presentation/    # iced UI
 ```
 
-Entry point: `src/main.rs` calls `media_dock::modules::downloader::presentation::app::run()`.
+Entry point: `src/main.rs` calls `pullryn::modules::downloader::presentation::app::run()`.
 
 ## CI/CD
 
@@ -68,5 +68,5 @@ GitHub Actions runs on macOS, Ubuntu, and Windows with the workflow:
 
 | Tool | Location |
 |------|----------|
-| FFmpeg/FFprobe | `~/.media-dock/bin/` (auto-installed) |
-| yt-dlp | `~/.media-dock/bin/` (auto-installed) |
+| FFmpeg/FFprobe | `~/.pullryn/bin/` (auto-installed) |
+| yt-dlp | `~/.pullryn/bin/` (auto-installed) |

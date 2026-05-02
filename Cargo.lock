@@ -2125,23 +2125,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "media-dock"
-version = "1.0.0"
-dependencies = [
- "iced",
- "open",
- "rfd",
- "serde",
- "serde_json",
- "tar",
- "thiserror 1.0.69",
- "ureq",
- "winres",
- "xz2",
- "zip",
-]
-
-[[package]]
 name = "memchr"
 version = "2.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2859,6 +2842,23 @@ name = "profiling"
 version = "1.0.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3eb8486b569e12e2c32ad3e204dbaba5e4b5b216e9367044f25f1dba42341773"
+
+[[package]]
+name = "pullryn"
+version = "1.0.0"
+dependencies = [
+ "iced",
+ "open",
+ "rfd",
+ "serde",
+ "serde_json",
+ "tar",
+ "thiserror 1.0.69",
+ "ureq",
+ "winres",
+ "xz2",
+ "zip",
+]
 
 [[package]]
 name = "qoi"
