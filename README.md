@@ -6,7 +6,7 @@ A desktop application with a Rust + Tauri backend and a Svelte frontend for down
 
 ## Installation
 
-For packaged install instructions on macOS (`.dmg`), Windows (`.msi`), and Linux (`.deb`), see [`HOW_TO_INSTALL.md`](HOW_TO_INSTALL.md).
+For packaged install instructions on macOS (`.dmg`), Windows (`.exe`), and Linux (`.deb`), see [`HOW_TO_INSTALL.md`](HOW_TO_INSTALL.md).
 
 ## Features
 
@@ -70,6 +70,32 @@ Entry point: `src/main.rs` calls `pullyt::modules::downloader::presentation::tau
 
 GitHub Actions runs on macOS, Ubuntu, and Windows with the workflow:
 `cargo check` → `cargo test` → `cargo build --release`
+
+## Tauri Updater
+
+- Updater plugin is enabled in `tauri.conf.json` and registered in `src/modules/downloader/presentation/tauri_app.rs`.
+- Windows release target is NSIS (`.exe`) and updater checks are exposed in-app via a manual `Check for updates` button.
+- Configure `plugins.updater.pubkey` and `plugins.updater.endpoints` in `tauri.conf.json` before shipping.
+
+Generate signing keys:
+
+```bash
+npm run tauri signer generate -- -w ~/.tauri/pullyt.key
+```
+
+Set GitHub repository secrets for release signing:
+
+- `TAURI_SIGNING_PRIVATE_KEY`
+- `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`
+
+Publish a `latest.json` endpoint that includes per-platform signed artifacts (`.sig`) for:
+
+- `windows-x86_64` (NSIS setup exe)
+- `darwin-aarch64`
+- `darwin-x86_64`
+- `linux-x86_64`
+
+Starter template: `updater/latest.json.template`
 
 ## Dependencies
 

@@ -1,0 +1,23 @@
+{
+  "version": "1.2.0",
+  "notes": "Bug fixes and improvements",
+  "pub_date": "2026-05-03T00:00:00Z",
+  "platforms": {
+    "windows-x86_64": {
+      "signature": "REPLACE_WITH_WINDOWS_SIG_CONTENT",
+      "url": "https://github.com/pausegarra/pullyt/releases/download/1.2.0/Pullyt_1.2.0_x64-setup.exe"
+    },
+    "darwin-aarch64": {
+      "signature": "REPLACE_WITH_MACOS_ARM64_SIG_CONTENT",
+      "url": "https://github.com/pausegarra/pullyt/releases/download/1.2.0/Pullyt_aarch64.app.tar.gz"
+    },
+    "darwin-x86_64": {
+      "signature": "REPLACE_WITH_MACOS_X64_SIG_CONTENT",
+      "url": "https://github.com/pausegarra/pullyt/releases/download/1.2.0/Pullyt_x64.app.tar.gz"
+    },
+    "linux-x86_64": {
+      "signature": "REPLACE_WITH_LINUX_SIG_CONTENT",
+      "url": "https://github.com/pausegarra/pullyt/releases/download/1.2.0/Pullyt.AppImage.tar.gz"
+    }
+  }
+}
