@@ -17,7 +17,7 @@ use zip::ZipArchive;
 use crate::modules::downloader::domain::errors::DownloaderError;
 use crate::modules::downloader::domain::ports::DependencyPort;
 
-const USER_AGENT: &str = "media-dock dependency bootstrap";
+const USER_AGENT: &str = "pullryn dependency bootstrap";
 
 pub struct SystemDependencies;
 
@@ -201,7 +201,7 @@ fn install_local_yt_dlp() -> Result<(), DownloaderError> {
 }
 
 fn local_bin_dir() -> PathBuf {
-    home_dir().join(".media-dock")
+    home_dir().join(".pullryn")
 }
 
 fn home_dir() -> PathBuf {

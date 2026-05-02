@@ -34,7 +34,7 @@ pub fn run() -> iced::Result {
         },
         ..Default::default()
     };
-    MediaDockApp::run(settings)
+    PullrynApp::run(settings)
 }
 
 #[derive(Debug, Clone)]
@@ -56,7 +56,7 @@ enum WorkerEvent {
     Done(Result<(), String>),
 }
 
-pub struct MediaDockApp {
+pub struct PullrynApp {
     url: String,
     mode: DownloadMode,
     preset: DownloadPreset,
@@ -69,7 +69,7 @@ pub struct MediaDockApp {
     busy: bool,
 }
 
-impl Application for MediaDockApp {
+impl Application for PullrynApp {
     type Executor = executor::Default;
     type Message = Message;
     type Theme = Theme;
@@ -102,7 +102,7 @@ impl Application for MediaDockApp {
     }
 
     fn title(&self) -> String {
-        "MediaDock - YouTube Downloader".to_string()
+        "Pullryn - YouTube Downloader".to_string()
     }
 
     fn theme(&self) -> Self::Theme {
@@ -162,7 +162,7 @@ impl Application for MediaDockApp {
                 }
             }
             Message::OpenGithub => {
-                let _ = open::that("https://github.com/pausegarra/media-dock");
+                let _ = open::that("https://github.com/pausegarra/pullryn");
             }
         }
         Command::none()

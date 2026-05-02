@@ -63,7 +63,7 @@ jobs:
       - name: Create ZIP archive
         shell: powershell
         run: |
-          Compress-Archive -Path "target/x86_64-pc-windows-msvc/release/media-dock.exe" -DestinationPath "media-dock-windows-x86_64.zip"
+          Compress-Archive -Path "target/x86_64-pc-windows-msvc/release/pullryn.exe" -DestinationPath "pullryn-windows-x86_64.zip"
 
       - name: Upload ZIP to draft release
         shell: bash
@@ -71,7 +71,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release upload "${GITHUB_REF_NAME}" \
-            "media-dock-windows-x86_64.zip" \
+            "pullryn-windows-x86_64.zip" \
             --repo "${GITHUB_REPOSITORY}" \
             --clobber
 
@@ -82,7 +82,7 @@ jobs:
           echo "ProductVersion=$version" >> $env:GITHUB_ENV
 
       - name: Build MSI
-        run: cargo wix --no-build --output media-dock-windows-x86_64.msi --nocapture
+        run: cargo wix --no-build --output pullryn-windows-x86_64.msi --nocapture
 
       - name: Upload MSI to draft release
         shell: bash
@@ -90,7 +90,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release upload "${GITHUB_REF_NAME}" \
-            "media-dock-windows-x86_64.msi" \
+            "pullryn-windows-x86_64.msi" \
             --repo "${GITHUB_REPOSITORY}" \
             --clobber
 
@@ -140,16 +140,16 @@ jobs:
         shell: bash
         env:
           TARGET: ${{ matrix.rust_target }}
-          ARCHIVE_NAME: media-dock-${{ matrix.asset_suffix }}.tar.gz
+          ARCHIVE_NAME: pullryn-${{ matrix.asset_suffix }}.tar.gz
         run: |
           cd "target/${TARGET}/release"
-          tar -czf "../../../${ARCHIVE_NAME}" "media-dock"
+          tar -czf "../../../${ARCHIVE_NAME}" "pullryn"
 
       - name: Upload tar.gz to draft release
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          ARCHIVE_NAME: media-dock-${{ matrix.asset_suffix }}.tar.gz
+          ARCHIVE_NAME: pullryn-${{ matrix.asset_suffix }}.tar.gz
         run: |
           gh release upload "${GITHUB_REF_NAME}" \
             "${ARCHIVE_NAME}" \
@@ -160,19 +160,19 @@ jobs:
         shell: bash
         env:
           TARGET: ${{ matrix.rust_target }}
-          DMG_NAME: media-dock-${{ matrix.asset_suffix }}.dmg
+          DMG_NAME: pullryn-${{ matrix.asset_suffix }}.dmg
         run: |
           rm -f "${DMG_NAME}"
           create-dmg \
-            --volname "MediaDock" \
+            --volname "Pullryn" \
             "${DMG_NAME}" \
-            "target/${TARGET}/release/bundle/osx/Media Dock.app"
+            "target/${TARGET}/release/bundle/osx/Pullryn.app"
 
       - name: Upload DMG to draft release
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          DMG_NAME: media-dock-${{ matrix.asset_suffix }}.dmg
+          DMG_NAME: pullryn-${{ matrix.asset_suffix }}.dmg
         run: |
           gh release upload "${GITHUB_REF_NAME}" \
             "${DMG_NAME}" \
@@ -203,7 +203,7 @@ jobs:
         shell: bash
         run: |
           cd "target/x86_64-unknown-linux-gnu/release"
-          tar -czf "../../../media-dock-linux-x86_64.tar.gz" "media-dock"
+          tar -czf "../../../pullryn-linux-x86_64.tar.gz" "pullryn"
 
       - name: Upload tar.gz to draft release
         shell: bash
@@ -211,7 +211,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release upload "${GITHUB_REF_NAME}" \
-            "media-dock-linux-x86_64.tar.gz" \
+            "pullryn-linux-x86_64.tar.gz" \
             --repo "${GITHUB_REPOSITORY}" \
             --clobber
 
@@ -220,7 +220,7 @@ jobs:
 
       - name: Rename DEB package
         shell: bash
-        run: mv target/x86_64-unknown-linux-gnu/debian/*.deb media-dock-linux-x86_64.deb
+        run: mv target/x86_64-unknown-linux-gnu/debian/*.deb pullryn-linux-x86_64.deb
 
       - name: Upload DEB to draft release
         shell: bash
@@ -228,6 +228,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release upload "${GITHUB_REF_NAME}" \
-            "media-dock-linux-x86_64.deb" \
+            "pullryn-linux-x86_64.deb" \
             --repo "${GITHUB_REPOSITORY}" \
             --clobber

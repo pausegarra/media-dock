@@ -16,7 +16,7 @@ impl SaveDialogPort for NativeSaveDialog {
 
         let safe_title = sanitize_filename(title);
         let default_name = if safe_title.is_empty() {
-            "media-dock".to_string()
+            "pullryn".to_string()
         } else {
             safe_title
         };
