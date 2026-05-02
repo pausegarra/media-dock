@@ -9,13 +9,14 @@ use iced::widget::svg::{Svg, Handle};
 use iced::{window, Application, Color, Command, Element, Length, Settings, Subscription};
 
 use crate::modules::downloader::application::use_cases::{
-    BootstrapDependenciesUseCase, DependencyReport, DownloadMediaUseCase,
+    BootstrapDependenciesUseCase, CheckForUpdatesUseCase, DependencyReport, DownloadMediaUseCase,
 };
 use crate::modules::downloader::domain::entities::{
     AudioQuality, DownloadMode, DownloadPreset, DownloadProgress, DownloadRequest, Provider,
-    VideoQuality,
+    UpdateStatus, VideoQuality,
 };
 use crate::modules::downloader::infrastructure::dependencies::SystemDependencies;
+use crate::modules::downloader::infrastructure::github_releases::GitHubReleaseAdapter;
 use crate::modules::downloader::infrastructure::save_dialog::NativeSaveDialog;
 use crate::modules::downloader::infrastructure::yt_dlp::YtDlpAdapter;
 
@@ -39,6 +40,9 @@ pub fn run() -> iced::Result {
 
 #[derive(Debug, Clone)]
 pub enum Message {
+    CheckUpdatesComplete(UpdateStatus),
+    OpenReleaseLink,
+    SkipUpdateAndContinue,
     UrlChanged(String),
     ModeChanged(DownloadMode),
     PresetChanged(DownloadPreset),
@@ -56,7 +60,18 @@ enum WorkerEvent {
     Done(Result<(), String>),
 }
 
+enum AppPhase {
+    CheckingUpdates,
+    UpdateGate {
+        release_url: String,
+        latest_version: String,
+    },
+    Main,
+}
+
 pub struct PullrynApp {
+    phase: AppPhase,
+    current_version: String,
     url: String,
     mode: DownloadMode,
     preset: DownloadPreset,
@@ -76,14 +91,18 @@ impl Application for PullrynApp {
     type Flags = ();
 
     fn new(_flags: Self::Flags) -> (Self, Command<Message>) {
+        let current_version = env!("CARGO_PKG_VERSION").to_string();
+
         let app = Self {
+            phase: AppPhase::CheckingUpdates,
+            current_version: current_version.clone(),
             url: String::new(),
             mode: DownloadMode::VideoWithAudio,
             preset: DownloadPreset::Compatibility,
             video_quality: VideoQuality::Best,
             audio_quality: AudioQuality::Best,
             progress: 0.0,
-            status: "Bootstrapping dependencies...".to_string(),
+            status: "Checking for updates...".to_string(),
             dependency_info: String::new(),
             pending_request: None,
             busy: true,
@@ -91,11 +110,11 @@ impl Application for PullrynApp {
 
         let cmd = Command::perform(
             async move {
-                let dep = Arc::new(SystemDependencies);
-                let use_case = BootstrapDependenciesUseCase::new(dep);
-                use_case.execute().map_err(|e| e.to_string())
+                let release_port = Arc::new(GitHubReleaseAdapter);
+                let use_case = CheckForUpdatesUseCase::new(release_port, current_version);
+                use_case.execute()
             },
-            Message::BootstrapComplete,
+            Message::CheckUpdatesComplete,
         );
 
         (app, cmd)
@@ -111,6 +130,47 @@ impl Application for PullrynApp {
 
     fn update(&mut self, message: Message) -> Command<Message> {
         match message {
+            Message::CheckUpdatesComplete(status) => {
+                if let UpdateStatus::UpdateAvailable(release) = status {
+                    self.phase = AppPhase::UpdateGate {
+                        release_url: release.url,
+                        latest_version: release.version,
+                    };
+                    self.status = "A new version is available.".to_string();
+                    self.busy = false;
+                    return Command::none();
+                }
+
+                self.phase = AppPhase::Main;
+                self.status = "Bootstrapping dependencies...".to_string();
+                return Command::perform(
+                    async move {
+                        let dep = Arc::new(SystemDependencies);
+                        let use_case = BootstrapDependenciesUseCase::new(dep);
+                        use_case.execute().map_err(|e| e.to_string())
+                    },
+                    Message::BootstrapComplete,
+                );
+            }
+            Message::OpenReleaseLink => {
+                if let AppPhase::UpdateGate { ref release_url, .. } = self.phase {
+                    let _ = open::that(release_url);
+                }
+                return Command::none();
+            }
+            Message::SkipUpdateAndContinue => {
+                self.phase = AppPhase::Main;
+                self.status = "Bootstrapping dependencies...".to_string();
+                self.busy = true;
+                return Command::perform(
+                    async move {
+                        let dep = Arc::new(SystemDependencies);
+                        let use_case = BootstrapDependenciesUseCase::new(dep);
+                        use_case.execute().map_err(|e| e.to_string())
+                    },
+                    Message::BootstrapComplete,
+                );
+            }
             Message::UrlChanged(v) => self.url = v,
             Message::ModeChanged(v) => self.mode = v,
             Message::PresetChanged(v) => self.preset = v,
@@ -210,6 +270,14 @@ impl Application for PullrynApp {
     }
 
     fn view(&self) -> Element<'_, Message> {
+        if let AppPhase::UpdateGate {
+            ref release_url,
+            ref latest_version,
+        } = self.phase
+        {
+            return self.view_update_gate(release_url, latest_version);
+        }
+
         let logo = Svg::new(Handle::from_memory(&*LOGO_SVG))
             .width(Length::Fixed(480.0))
             .height(Length::Fixed(240.0));
@@ -332,6 +400,63 @@ impl Application for PullrynApp {
         .spacing(14)
         .padding([24, 24, 32, 24])
         .max_width(900);
+
+        container(body)
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .center_x()
+            .center_y()
+            .into()
+    }
+}
+
+impl PullrynApp {
+    fn view_update_gate<'a>(
+        &'a self,
+        _release_url: &'a str,
+        latest_version: &'a str,
+    ) -> Element<'a, Message> {
+        let logo = Svg::new(Handle::from_memory(&*LOGO_SVG))
+            .width(Length::Fixed(260.0))
+            .height(Length::Fixed(130.0));
+
+        let heading = text("Update available")
+            .size(24)
+            .font(iced::Font {
+                weight: iced::font::Weight::Bold,
+                ..iced::Font::DEFAULT
+            });
+
+        let current = text(format!("Installed version: v{}", self.current_version)).size(14);
+        let latest = text(format!("Latest version: v{latest_version}")).size(14);
+
+        let download_btn = button("Download update")
+            .on_press(Message::OpenReleaseLink)
+            .padding(10);
+
+        let skip_btn = button("Not now")
+            .on_press(Message::SkipUpdateAndContinue)
+            .padding(10);
+
+        let actions = row![download_btn, skip_btn].spacing(12);
+
+        let body = column![
+            container(logo)
+                .width(Length::Fill)
+                .center_x()
+                .padding([0, 0, 16, 0]),
+            heading,
+            current,
+            latest,
+            container(actions)
+                .width(Length::Fill)
+                .center_x()
+                .padding([20, 0, 0, 0]),
+        ]
+        .spacing(12)
+        .padding(32)
+        .align_items(iced::Alignment::Center)
+        .max_width(520);
 
         container(body)
             .width(Length::Fill)
