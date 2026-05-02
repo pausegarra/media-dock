@@ -1,11 +1,11 @@
 [package]
 name = "pullyt"
-version = "1.0.0"
+version = "1.1.0"
 edition = "2024"
 build = "build.rs"
 
 [dependencies]
-iced = { version = "0.12", features = ["tokio", "image", "svg"] }
+tauri = { version = "2", features = [] }
 rfd = "0.14"
 open = "5"
 serde = { version = "1", features = ["derive"] }
@@ -16,33 +16,8 @@ zip = { version = "2", default-features = false, features = ["deflate"] }
 tar = "0.4"
 xz2 = "0.1"
 
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
 [target.'cfg(windows)'.build-dependencies]
 winres = "0.1"
-
-[package.metadata.bundle]
-name = "Pullyt"
-identifier = "com.pausegarra.pullyt"
-icon = ["assets/icons/macos/AppIcon.icns"]
-osx_minimum_system_version = "10.15"
-category = "Utility"
-
-[package.metadata.deb]
-name = "pullyt"
-maintainer = "pausegarra"
-copyright = "2026, pausegarra"
-license-file = ["LICENSE", "4"]
-section = "utils"
-priority = "optional"
-depends = "$auto"
-assets = [
-  ["target/release/pullyt", "usr/bin/pullyt", "755"],
-  ["packaging/linux/pullyt.desktop", "usr/share/applications/pullyt.desktop", "644"],
-  ["assets/icons/linux/hicolor/16x16/apps/pullyt.png", "usr/share/icons/hicolor/16x16/apps/pullyt.png", "644"],
-  ["assets/icons/linux/hicolor/24x24/apps/pullyt.png", "usr/share/icons/hicolor/24x24/apps/pullyt.png", "644"],
-  ["assets/icons/linux/hicolor/32x32/apps/pullyt.png", "usr/share/icons/hicolor/32x32/apps/pullyt.png", "644"],
-  ["assets/icons/linux/hicolor/48x48/apps/pullyt.png", "usr/share/icons/hicolor/48x48/apps/pullyt.png", "644"],
-  ["assets/icons/linux/hicolor/64x64/apps/pullyt.png", "usr/share/icons/hicolor/64x64/apps/pullyt.png", "644"],
-  ["assets/icons/linux/hicolor/128x128/apps/pullyt.png", "usr/share/icons/hicolor/128x128/apps/pullyt.png", "644"],
-  ["assets/icons/linux/hicolor/256x256/apps/pullyt.png", "usr/share/icons/hicolor/256x256/apps/pullyt.png", "644"],
-  ["assets/icons/linux/hicolor/512x512/apps/pullyt.png", "usr/share/icons/hicolor/512x512/apps/pullyt.png", "644"]
-]

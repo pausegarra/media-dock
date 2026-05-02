@@ -1,0 +1,43 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Pullyt",
+  "version": "1.1.0",
+  "identifier": "com.pausegarra.pullyt",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build",
+    "devUrl": "http://localhost:5173",
+    "frontendDist": "dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Pullyt - YouTube Downloader",
+        "width": 800,
+        "height": 800,
+        "resizable": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "assets/icons/windows/app.ico",
+      "assets/icons/macos/AppIcon.icns",
+      "assets/icons/linux/hicolor/512x512/apps/pullyt.png"
+    ],
+    "category": "Utility",
+    "macOS": {
+      "minimumSystemVersion": "10.15"
+    },
+    "windows": {
+      "wix": {
+        "template": "wix/main.wxs"
+      }
+    }
+  }
+}

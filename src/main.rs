@@ -1,5 +1,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-fn main() -> iced::Result {
-    pullyt::modules::downloader::presentation::app::run()
+fn main() {
+    pullyt::modules::downloader::presentation::tauri_app::run()
 }

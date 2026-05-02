@@ -1,1 +1,1 @@
-pub mod app;
+pub mod tauri_app;

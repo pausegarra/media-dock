@@ -1,0 +1,230 @@
+use std::sync::Arc;
+
+use serde::{Deserialize, Serialize};
+use tauri::{AppHandle, Emitter};
+
+use crate::modules::downloader::application::use_cases::{
+    BootstrapDependenciesUseCase, CheckForUpdatesUseCase, DownloadMediaUseCase,
+};
+use crate::modules::downloader::domain::entities::{
+    AudioQuality, DownloadMode, DownloadPreset, DownloadProgress, DownloadRequest, Provider,
+    UpdateStatus, VideoQuality,
+};
+use crate::modules::downloader::infrastructure::dependencies::SystemDependencies;
+use crate::modules::downloader::infrastructure::github_releases::GitHubReleaseAdapter;
+use crate::modules::downloader::infrastructure::save_dialog::NativeSaveDialog;
+use crate::modules::downloader::infrastructure::yt_dlp::YtDlpAdapter;
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DownloadRequestPayload {
+    url: String,
+    mode: String,
+    preset: String,
+    video_quality: String,
+    audio_quality: String,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct UpdateGatePayload {
+    update_available: bool,
+    release_url: Option<String>,
+    latest_version: Option<String>,
+    current_version: String,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct DependencyReportPayload {
+    yt_dlp: String,
+    ffmpeg: String,
+    ffprobe: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct DownloadProgressPayload {
+    fraction: f32,
+    message: String,
+}
+
+impl From<DownloadProgress> for DownloadProgressPayload {
+    fn from(value: DownloadProgress) -> Self {
+        Self {
+            fraction: value.fraction,
+            message: value.message,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct DownloadCompletePayload {
+    ok: bool,
+    error: Option<String>,
+}
+
+impl DownloadRequestPayload {
+    fn into_domain(self) -> Result<DownloadRequest, String> {
+        Ok(DownloadRequest {
+            provider: Provider::YouTube,
+            mode: parse_mode(&self.mode)?,
+            preset: parse_preset(&self.preset)?,
+            video_quality: parse_video_quality(&self.video_quality)?,
+            audio_quality: parse_audio_quality(&self.audio_quality)?,
+            url: self.url,
+            output_path: String::new(),
+        })
+    }
+}
+
+fn parse_mode(value: &str) -> Result<DownloadMode, String> {
+    match value {
+        "video_with_audio" => Ok(DownloadMode::VideoWithAudio),
+        "audio_only_mp3" => Ok(DownloadMode::AudioOnlyMp3),
+        _ => Err(format!("invalid mode: {value}")),
+    }
+}
+
+fn parse_preset(value: &str) -> Result<DownloadPreset, String> {
+    match value {
+        "compatibility" => Ok(DownloadPreset::Compatibility),
+        "max_quality" => Ok(DownloadPreset::MaxQuality),
+        _ => Err(format!("invalid preset: {value}")),
+    }
+}
+
+fn parse_video_quality(value: &str) -> Result<VideoQuality, String> {
+    match value {
+        "best" => Ok(VideoQuality::Best),
+        "p1080" => Ok(VideoQuality::P1080),
+        "p720" => Ok(VideoQuality::P720),
+        "p480" => Ok(VideoQuality::P480),
+        _ => Err(format!("invalid video quality: {value}")),
+    }
+}
+
+fn parse_audio_quality(value: &str) -> Result<AudioQuality, String> {
+    match value {
+        "best" => Ok(AudioQuality::Best),
+        "k320" => Ok(AudioQuality::K320),
+        "k192" => Ok(AudioQuality::K192),
+        "k128" => Ok(AudioQuality::K128),
+        _ => Err(format!("invalid audio quality: {value}")),
+    }
+}
+
+#[tauri::command]
+async fn check_for_updates() -> Result<UpdateGatePayload, String> {
+    let current_version = env!("CARGO_PKG_VERSION").to_string();
+    eprintln!("[updates] check_for_updates: start current_version={current_version}");
+
+    let (status, current_version) = tauri::async_runtime::spawn_blocking(move || {
+        eprintln!("[updates] worker: building use case");
+        let release_port = Arc::new(GitHubReleaseAdapter);
+        let use_case = CheckForUpdatesUseCase::new(release_port, current_version.clone());
+        let result = use_case.execute();
+        eprintln!("[updates] worker: execute finished status={result:?}");
+        (result, current_version)
+    })
+    .await
+    .map_err(|e| format!("update check panicked: {e}"))?;
+
+    eprintln!("[updates] main: resolved status={status:?}");
+
+    let payload = match status {
+        UpdateStatus::UpToDate => UpdateGatePayload {
+            update_available: false,
+            release_url: None,
+            latest_version: None,
+            current_version,
+        },
+        UpdateStatus::UpdateAvailable(release) => UpdateGatePayload {
+            update_available: true,
+            release_url: Some(release.url),
+            latest_version: Some(release.version),
+            current_version,
+        },
+    };
+    eprintln!("[updates] check_for_updates: returning payload");
+    Ok(payload)
+}
+
+#[tauri::command]
+async fn bootstrap_dependencies() -> Result<DependencyReportPayload, String> {
+    eprintln!("[deps] bootstrap_dependencies: start");
+
+    let result = tauri::async_runtime::spawn_blocking(move || {
+        let dep = Arc::new(SystemDependencies);
+        let use_case = BootstrapDependenciesUseCase::new(dep);
+        use_case
+            .execute()
+            .map(|report| DependencyReportPayload {
+                yt_dlp: report.yt_dlp,
+                ffmpeg: report.ffmpeg,
+                ffprobe: report.ffprobe,
+            })
+            .map_err(|e| e.to_string())
+    })
+    .await
+    .map_err(|e| format!("dependency bootstrap panicked: {e}"))?;
+
+    eprintln!("[deps] bootstrap_dependencies: completed");
+    result
+}
+
+#[tauri::command]
+fn open_release_link(url: String) {
+    let _ = open::that(url);
+}
+
+#[tauri::command]
+fn open_github() {
+    let _ = open::that("https://github.com/pausegarra/pullyt");
+}
+
+#[tauri::command]
+fn start_download(app: AppHandle, payload: DownloadRequestPayload) -> Result<(), String> {
+    let request = payload.into_domain()?;
+    tauri::async_runtime::spawn(async move {
+        let dependencies = Arc::new(SystemDependencies);
+        let save = Arc::new(NativeSaveDialog);
+        let yt_dlp = Arc::new(YtDlpAdapter);
+        let use_case = DownloadMediaUseCase::new(dependencies, save, yt_dlp);
+
+        let result = use_case.execute(request, &mut |progress| {
+            let payload: DownloadProgressPayload = progress.into();
+            let _ = app.emit("download-progress", payload);
+        });
+
+        let done = match result {
+            Ok(()) => DownloadCompletePayload {
+                ok: true,
+                error: None,
+            },
+            Err(err) => DownloadCompletePayload {
+                ok: false,
+                error: Some(err.to_string()),
+            },
+        };
+
+        let _ = app.emit("download-complete", done);
+    });
+
+    Ok(())
+}
+
+pub fn run() {
+    eprintln!("[startup] tauri_app::run starting");
+    tauri::Builder::default()
+        .invoke_handler(tauri::generate_handler![
+            check_for_updates,
+            bootstrap_dependencies,
+            open_release_link,
+            open_github,
+            start_download,
+        ])
+        .run(tauri::generate_context!())
+        .expect("failed to run tauri app");
+}

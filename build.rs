@@ -1,4 +1,6 @@
 fn main() {
+    tauri_build::build();
+
     #[cfg(target_os = "windows")]
     {
         let mut res = winres::WindowsResource::new();
