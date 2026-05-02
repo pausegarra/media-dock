@@ -1,12 +1,13 @@
 # Pullyt
 
-Rust desktop app using [iced](https://iced.rs/) GUI framework. Downloads media via `yt-dlp`, with FFmpeg auto-installed at startup for cross-platform encoding.
+Rust desktop app using [Tauri](https://tauri.app/) backend + Svelte frontend. Downloads media via `yt-dlp`, with FFmpeg auto-installed at startup for cross-platform encoding.
 
 ## Build & Run
 
 ```bash
+cd ui && npm install
 cargo build --release
-cargo run --release
+cargo tauri dev
 cargo test
 cargo check
 ```
@@ -17,9 +18,11 @@ Single module: `modules/downloader/` — Clean Architecture with:
 - `domain/` — entities, value objects, ports (traits), errors
 - `application/` — use cases
 - `infrastructure/` — adapters (yt_dlp, save_dialog, dependencies)
-- `presentation/` — iced UI
+- `presentation/` — Tauri command/event layer
 
-Entry point: `src/main.rs` calls `pullyt::modules::downloader::presentation::app::run()`.
+Frontend lives in `ui/` (Svelte + Vite).
+
+Entry point: `src/main.rs` calls `pullyt::modules::downloader::presentation::tauri_app::run()`.
 
 ## Dependencies
 

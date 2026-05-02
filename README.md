@@ -2,7 +2,7 @@
 
 # Pullyt
 
-A Rust desktop application for downloading media using `yt-dlp` with FFmpeg for cross-platform encoding.
+A desktop application with a Rust + Tauri backend and a Svelte frontend for downloading media using `yt-dlp` with FFmpeg for cross-platform encoding.
 
 ## Installation
 
@@ -24,8 +24,9 @@ For packaged install instructions on macOS (`.dmg`), Windows (`.msi`), and Linux
 ## Build & Run
 
 ```bash
+cd ui && npm install
 cargo build --release
-cargo run --release
+cargo tauri dev
 ```
 
 ## Testing
@@ -58,10 +59,12 @@ modules/downloader/
 ├── domain/          # entities, value objects, ports (traits), errors
 ├── application/     # use cases
 ├── infrastructure/  # adapters (yt_dlp, save_dialog, dependencies)
-└── presentation/    # iced UI
+└── presentation/    # Tauri backend commands/events
 ```
 
-Entry point: `src/main.rs` calls `pullyt::modules::downloader::presentation::app::run()`.
+UI frontend: `ui/` (Svelte + Vite).
+
+Entry point: `src/main.rs` calls `pullyt::modules::downloader::presentation::tauri_app::run()`.
 
 ## CI/CD
 
