@@ -79,16 +79,10 @@ jobs:
         shell: pwsh
         run: |
           $version = (cargo metadata --no-deps --format-version 1 | ConvertFrom-Json).packages[0].version
-          echo "PRODUCT_VERSION=$version" | Out-String -Stream | ForEach-Object { echo "PRODUCT_VERSION=$_" | Out-String -Stream } >> $env:GITHUB_ENV
+          echo "ProductVersion=$version" >> $env:GITHUB_ENV
 
-      - name: Build MSI package
-        shell: pwsh
-        run: |
-          cargo wix `
-            --no-build `
-            --output media-dock-windows-x86_64.msi `
-            --define ProductVersion=$env:PRODUCT_VERSION `
-            --nocapture
+      - name: Build MSI
+        run: cargo wix --no-build --output media-dock-windows-x86_64.msi --nocapture
 
       - name: Upload MSI to draft release
         shell: bash

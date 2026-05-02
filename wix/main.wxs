@@ -4,7 +4,7 @@
     Id="*"
     Name="Media Dock"
     UpgradeCode="a5f8af2b-ef89-4588-a2b5-f2b7924691d6"
-    Version="$(var.CargoPackageVersion)"
+    Version="$(env.ProductVersion)"
     Language="1033"
     Manufacturer="pausegarra">
 
