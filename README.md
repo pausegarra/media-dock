@@ -4,6 +4,10 @@
 
 A Rust desktop application for downloading media using `yt-dlp` with FFmpeg for cross-platform encoding.
 
+## Installation
+
+For packaged install instructions on macOS (`.dmg`), Windows (`.msi`), and Linux (`.deb`), see [`HOW_TO_INSTALL.md`](HOW_TO_INSTALL.md).
+
 ## Features
 
 - Download media from various video platforms via `yt-dlp`
@@ -14,8 +18,8 @@ A Rust desktop application for downloading media using `yt-dlp` with FFmpeg for 
 ## Requirements
 
 - Rust toolchain supporting **edition 2024**
-- FFmpeg/FFprobe (auto-installed to `~/.pullryn/bin/` if not on PATH)
-- `yt-dlp` (auto-installed to `~/.pullryn/bin/` if not on PATH)
+- FFmpeg/FFprobe (auto-installed to `~/.pullryn/` if not on PATH)
+- `yt-dlp` (auto-installed to `~/.pullryn/` if not on PATH)
 
 ## Build & Run
 
@@ -68,5 +72,5 @@ GitHub Actions runs on macOS, Ubuntu, and Windows with the workflow:
 
 | Tool | Location |
 |------|----------|
-| FFmpeg/FFprobe | `~/.pullryn/bin/` (auto-installed) |
-| yt-dlp | `~/.pullryn/bin/` (auto-installed) |
+| FFmpeg/FFprobe | `~/.pullryn/` (auto-installed) |
+| yt-dlp | `~/.pullryn/` (auto-installed) |

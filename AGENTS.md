@@ -23,7 +23,7 @@ Entry point: `src/main.rs` calls `pullryn::modules::downloader::presentation::ap
 
 ## Dependencies
 
-The app auto-installs FFmpeg/FFprobe and `yt-dlp` to `~/.pullryn/bin/` when not found on PATH.
+The app auto-installs FFmpeg/FFprobe and `yt-dlp` to `~/.pullryn/` when not found on PATH.
 
 ## Tests
 
