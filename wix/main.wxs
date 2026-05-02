@@ -21,7 +21,7 @@
       <ComponentGroupRef Id="ProductComponents" />
     </Feature>
 
-    <Icon Id="ProductIcon" SourceFile="assets/icons/windows/app.ico" />
+    <Icon Id="ProductIcon" SourceFile="assets\icons\windows\app.ico" />
     <Property Id="ARPPRODUCTICON" Value="ProductIcon" />
   </Product>
 
@@ -38,7 +38,7 @@
       <Component Id="MediaDockExeComponent" Guid="e2acf926-bb4b-463e-b660-eb4dfd18f422">
         <File
           Id="MediaDockExe"
-          Source="target\x86_64-pc-windows-msvc\release\media-dock.exe"
+          Source="target\release\media-dock.exe"
           KeyPath="yes" />
       </Component>
     </ComponentGroup>
