@@ -83,7 +83,7 @@ fn ffmpeg_command_works(name: &str) -> bool {
 }
 
 fn command_works_with_arg(name: &str, arg: &str) -> bool {
-    Command::new(name)
+    command_with_hidden_window(Command::new(name))
         .arg(arg)
         .output()
         .map(|o| o.status.success())
@@ -127,7 +127,10 @@ fn validate_binary_with_retry(path: &Path, name: &str) -> Result<(), DownloaderE
     let mut last_error = String::new();
 
     for attempt in 1..=5 {
-        match Command::new(path).arg("-version").output() {
+        match command_with_hidden_window(Command::new(path))
+            .arg("-version")
+            .output()
+        {
             Ok(output) if output.status.success() => return Ok(()),
             Ok(output) => {
                 let stderr = String::from_utf8_lossy(&output.stderr);
@@ -165,7 +168,7 @@ fn install_local_yt_dlp() -> Result<(), DownloaderError> {
             "iwr https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe -OutFile '{}'",
             target.display()
         );
-        let status = Command::new("powershell")
+        let status = command_with_hidden_window(Command::new("powershell"))
             .arg("-Command")
             .arg(script)
             .status()
@@ -177,7 +180,7 @@ fn install_local_yt_dlp() -> Result<(), DownloaderError> {
 
     #[cfg(not(target_os = "windows"))]
     {
-        let status = Command::new("curl")
+        let status = command_with_hidden_window(Command::new("curl"))
             .args([
                 "-L",
                 "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp",
@@ -189,7 +192,7 @@ fn install_local_yt_dlp() -> Result<(), DownloaderError> {
         if !status.success() {
             return Err(DownloaderError::YtDlpUnavailable);
         }
-        let _ = Command::new("chmod")
+        let _ = command_with_hidden_window(Command::new("chmod"))
             .args(["+x", &target.display().to_string()])
             .status();
     }
@@ -299,6 +302,19 @@ fn set_executable(_path: &Path) -> Result<(), DownloaderError> {
 
 fn write_file(path: &Path, data: &[u8]) -> Result<(), DownloaderError> {
     fs::write(path, data).map_err(|e| DownloaderError::ProcessFailed(e.to_string()))
+}
+
+fn command_with_hidden_window(command: Command) -> Command {
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+        let mut command = command;
+        command.creation_flags(CREATE_NO_WINDOW);
+        return command;
+    }
+
+    command
 }
 
 #[cfg(target_os = "windows")]
