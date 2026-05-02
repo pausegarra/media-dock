@@ -2,7 +2,7 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
   <Product
     Id="*"
-    Name="Pullryn"
+    Name="Pullyt"
     UpgradeCode="A5F8AF2B-EF89-4588-A2B5-F2B7924691D6"
     Version="$(env.ProductVersion)"
     Language="1033"
@@ -26,10 +26,10 @@
     <Property Id="ARPPRODUCTICON" Value="ProductIcon" />
     <Property Id="ARPNOMODIFY" Value="yes" />
     <Property Id="ARPNOREPAIR" Value="yes" />
-    <Property Id="ARPHELPLINK" Value="https://github.com/pausegarra/pullryn" />
-    <Property Id="ARPURLINFOABOUT" Value="https://github.com/pausegarra/pullryn" />
+    <Property Id="ARPHELPLINK" Value="https://github.com/pausegarra/pullyt" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/pausegarra/pullyt" />
 
-    <Feature Id="ProductFeature" Title="Pullryn" Level="1">
+    <Feature Id="ProductFeature" Title="Pullyt" Level="1">
       <ComponentGroupRef Id="ProductComponents" />
     </Feature>
   </Product>
@@ -38,11 +38,11 @@
     <Directory Id="TARGETDIR" Name="SourceDir">
 
       <Directory Id="ProgramFiles64Folder">
-        <Directory Id="INSTALLFOLDER" Name="Pullryn" />
+        <Directory Id="INSTALLFOLDER" Name="Pullyt" />
       </Directory>
 
       <Directory Id="ProgramMenuFolder">
-        <Directory Id="ApplicationProgramsFolder" Name="Pullryn" />
+        <Directory Id="ApplicationProgramsFolder" Name="Pullyt" />
       </Directory>
 
       <Directory Id="DesktopFolder" />
@@ -54,27 +54,27 @@
   <ComponentGroup Id="ProductComponents">
 
     <Component
-      Id="PullrynExeComponent"
+      Id="PullytExeComponent"
       Directory="INSTALLFOLDER"
       Guid="E2ACF926-BB4B-463E-B660-EB4DFD18F422">
 
       <File
-        Id="PullrynExe"
-        Source="target\x86_64-pc-windows-msvc\release\pullryn.exe"
+        Id="PullytExe"
+        Source="target\x86_64-pc-windows-msvc\release\pullyt.exe"
         KeyPath="yes" />
     </Component>
 
     <Component
-      Id="PullrynShortcutsComponent"
+      Id="PullytShortcutsComponent"
       Directory="ApplicationProgramsFolder"
       Guid="D6C6A6A1-8F34-4D9D-9A7E-1F7A0A3B8C11">
 
       <Shortcut
         Id="StartMenuShortcut"
         Directory="ApplicationProgramsFolder"
-        Name="Pullryn"
-        Description="Pullryn"
-        Target="[INSTALLFOLDER]pullryn.exe"
+        Name="Pullyt"
+        Description="Pullyt"
+        Target="[INSTALLFOLDER]pullyt.exe"
         WorkingDirectory="INSTALLFOLDER"
         Icon="ProductIcon"
         IconIndex="0" />
@@ -82,9 +82,9 @@
       <Shortcut
         Id="DesktopShortcut"
         Directory="DesktopFolder"
-        Name="Pullryn"
-        Description="Pullryn"
-        Target="[INSTALLFOLDER]pullryn.exe"
+        Name="Pullyt"
+        Description="Pullyt"
+        Target="[INSTALLFOLDER]pullyt.exe"
         WorkingDirectory="INSTALLFOLDER"
         Icon="ProductIcon"
         IconIndex="0" />
@@ -96,7 +96,7 @@
 
       <RegistryValue
         Root="HKCU"
-        Key="Software\pausegarra\Pullryn"
+        Key="Software\pausegarra\Pullyt"
         Name="shortcuts"
         Type="integer"
         Value="1"

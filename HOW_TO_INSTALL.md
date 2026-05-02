@@ -1,6 +1,6 @@
-# How to Install Pullryn
+# How to Install Pullyt
 
-Install Pullryn from the GitHub Release assets for your operating system:
+Install Pullyt from the GitHub Release assets for your operating system:
 
 - macOS: `.dmg`
 - Windows: `.msi`
@@ -8,7 +8,7 @@ Install Pullryn from the GitHub Release assets for your operating system:
 
 ## Important: App Is Not Signed
 
-Pullryn is currently distributed as an **unsigned app**. Your operating system may warn or block it the first time you run it.
+Pullyt is currently distributed as an **unsigned app**. Your operating system may warn or block it the first time you run it.
 
 ## macOS (`.dmg`)
 
@@ -18,7 +18,7 @@ Pullryn is currently distributed as an **unsigned app**. Your operating system m
 4. Before opening the app, run:
 
 ```bash
-xattr -dr com.apple.quarantine "/Applications/Pullryn.app"
+xattr -dr com.apple.quarantine "/Applications/Pullyt.app"
 ```
 
 5. Open the app from Applications.
@@ -30,7 +30,7 @@ If macOS still warns you, open **System Settings -> Privacy & Security** and all
 1. Download the `.msi` file from the latest Release.
 2. Double-click the installer and follow the setup wizard.
 3. If Windows SmartScreen appears, click **More info** -> **Run anyway**.
-4. Launch Pullryn from the Start menu after installation.
+4. Launch Pullyt from the Start menu after installation.
 
 ## Linux (Debian/Ubuntu, `.deb`)
 
@@ -38,10 +38,10 @@ If macOS still warns you, open **System Settings -> Privacy & Security** and all
 2. Install it with:
 
 ```bash
-sudo apt install ./pullryn_<version>_amd64.deb
+sudo apt install ./pullyt_<version>_amd64.deb
 ```
 
-3. Launch Pullryn from your applications menu.
+3. Launch Pullyt from your applications menu.
 
 If `apt` reports dependency issues, run:
 
@@ -51,5 +51,5 @@ sudo apt -f install
 
 ## First Launch Notes
 
-- On first run, Pullryn may auto-install `yt-dlp`, FFmpeg, and FFprobe to `~/.pullryn/` if they are not already available on your system.
+- On first run, Pullyt may auto-install `yt-dlp`, FFmpeg, and FFprobe to `~/.pullyt/` if they are not already available on your system.
 - This can take a short moment depending on your network connection.

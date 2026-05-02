@@ -5,8 +5,8 @@ use crate::modules::downloader::domain::errors::DownloaderError;
 use crate::modules::downloader::domain::ports::ReleasePort;
 
 const LATEST_RELEASE_URL: &str =
-    "https://api.github.com/repos/pausegarra/pullryn/releases/latest";
-const USER_AGENT: &str = "pullryn update-check";
+    "https://api.github.com/repos/pausegarra/pullyt/releases/latest";
+const USER_AGENT: &str = "pullyt update-check";
 
 pub struct GitHubReleaseAdapter;
 

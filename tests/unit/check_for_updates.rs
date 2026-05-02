@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
-use pullryn::modules::downloader::application::use_cases::CheckForUpdatesUseCase;
-use pullryn::modules::downloader::domain::entities::{ReleaseInfo, UpdateStatus};
-use pullryn::modules::downloader::domain::errors::DownloaderError;
-use pullryn::modules::downloader::domain::ports::ReleasePort;
+use pullyt::modules::downloader::application::use_cases::CheckForUpdatesUseCase;
+use pullyt::modules::downloader::domain::entities::{ReleaseInfo, UpdateStatus};
+use pullyt::modules::downloader::domain::errors::DownloaderError;
+use pullyt::modules::downloader::domain::ports::ReleasePort;
 
 struct StubRelease {
     result: Result<ReleaseInfo, DownloaderError>,

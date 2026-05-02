@@ -1,8 +1,8 @@
 [Desktop Entry]
 Type=Application
-Name=Pullryn
+Name=Pullyt
 Comment=Download media using yt-dlp with bundled FFmpeg encoding
-Exec=pullryn
-Icon=pullryn
+Exec=pullyt
+Icon=pullyt
 Terminal=false
 Categories=Utility;AudioVideo;

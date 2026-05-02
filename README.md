@@ -1,6 +1,6 @@
-<img src="src/modules/downloader/presentation/assets/logo.svg" width="400" alt="Pullryn Logo" style="display:block;margin-left:auto;margin-right:auto;">
+<img src="src/modules/downloader/presentation/assets/logo.svg" width="400" alt="Pullyt Logo" style="display:block;margin-left:auto;margin-right:auto;">
 
-# Pullryn
+# Pullyt
 
 A Rust desktop application for downloading media using `yt-dlp` with FFmpeg for cross-platform encoding.
 
@@ -18,8 +18,8 @@ For packaged install instructions on macOS (`.dmg`), Windows (`.msi`), and Linux
 ## Requirements
 
 - Rust toolchain supporting **edition 2024**
-- FFmpeg/FFprobe (auto-installed to `~/.pullryn/` if not on PATH)
-- `yt-dlp` (auto-installed to `~/.pullryn/` if not on PATH)
+- FFmpeg/FFprobe (auto-installed to `~/.pullyt/` if not on PATH)
+- `yt-dlp` (auto-installed to `~/.pullyt/` if not on PATH)
 
 ## Build & Run
 
@@ -47,7 +47,7 @@ Generate platform icon assets:
 Outputs:
 - macOS: `assets/icons/macos/AppIcon.icns`
 - Windows: `assets/icons/windows/app.ico`
-- Linux: `assets/icons/linux/hicolor/*/apps/pullryn.png`
+- Linux: `assets/icons/linux/hicolor/*/apps/pullyt.png`
 
 ## Architecture
 
@@ -61,7 +61,7 @@ modules/downloader/
 └── presentation/    # iced UI
 ```
 
-Entry point: `src/main.rs` calls `pullryn::modules::downloader::presentation::app::run()`.
+Entry point: `src/main.rs` calls `pullyt::modules::downloader::presentation::app::run()`.
 
 ## CI/CD
 
@@ -72,5 +72,5 @@ GitHub Actions runs on macOS, Ubuntu, and Windows with the workflow:
 
 | Tool | Location |
 |------|----------|
-| FFmpeg/FFprobe | `~/.pullryn/` (auto-installed) |
-| yt-dlp | `~/.pullryn/` (auto-installed) |
+| FFmpeg/FFprobe | `~/.pullyt/` (auto-installed) |
+| yt-dlp | `~/.pullyt/` (auto-installed) |

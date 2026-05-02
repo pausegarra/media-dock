@@ -1,5 +1,5 @@
-use pullryn::modules::downloader::domain::errors::DownloaderError;
-use pullryn::modules::downloader::domain::value_objects::YoutubeUrl;
+use pullyt::modules::downloader::domain::errors::DownloaderError;
+use pullyt::modules::downloader::domain::value_objects::YoutubeUrl;
 
 #[test]
 fn accepts_youtube_watch_url() {

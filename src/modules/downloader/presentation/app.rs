@@ -35,7 +35,7 @@ pub fn run() -> iced::Result {
         },
         ..Default::default()
     };
-    PullrynApp::run(settings)
+    PullytApp::run(settings)
 }
 
 #[derive(Debug, Clone)]
@@ -69,7 +69,7 @@ enum AppPhase {
     Main,
 }
 
-pub struct PullrynApp {
+pub struct PullytApp {
     phase: AppPhase,
     current_version: String,
     url: String,
@@ -84,7 +84,7 @@ pub struct PullrynApp {
     busy: bool,
 }
 
-impl Application for PullrynApp {
+impl Application for PullytApp {
     type Executor = executor::Default;
     type Message = Message;
     type Theme = Theme;
@@ -121,7 +121,7 @@ impl Application for PullrynApp {
     }
 
     fn title(&self) -> String {
-        "Pullryn - YouTube Downloader".to_string()
+        "Pullyt - YouTube Downloader".to_string()
     }
 
     fn theme(&self) -> Self::Theme {
@@ -222,7 +222,7 @@ impl Application for PullrynApp {
                 }
             }
             Message::OpenGithub => {
-                let _ = open::that("https://github.com/pausegarra/pullryn");
+                let _ = open::that("https://github.com/pausegarra/pullyt");
             }
         }
         Command::none()
@@ -410,7 +410,7 @@ impl Application for PullrynApp {
     }
 }
 
-impl PullrynApp {
+impl PullytApp {
     fn view_update_gate<'a>(
         &'a self,
         _release_url: &'a str,

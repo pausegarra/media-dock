@@ -1,5 +1,5 @@
 [package]
-name = "pullryn"
+name = "pullyt"
 version = "1.0.0"
 edition = "2024"
 build = "build.rs"
@@ -20,14 +20,14 @@ xz2 = "0.1"
 winres = "0.1"
 
 [package.metadata.bundle]
-name = "Pullryn"
-identifier = "com.pausegarra.pullryn"
+name = "Pullyt"
+identifier = "com.pausegarra.pullyt"
 icon = ["assets/icons/macos/AppIcon.icns"]
 osx_minimum_system_version = "10.15"
 category = "Utility"
 
 [package.metadata.deb]
-name = "pullryn"
+name = "pullyt"
 maintainer = "pausegarra"
 copyright = "2026, pausegarra"
 license-file = ["LICENSE", "4"]
@@ -35,14 +35,14 @@ section = "utils"
 priority = "optional"
 depends = "$auto"
 assets = [
-  ["target/release/pullryn", "usr/bin/pullryn", "755"],
-  ["packaging/linux/pullryn.desktop", "usr/share/applications/pullryn.desktop", "644"],
-  ["assets/icons/linux/hicolor/16x16/apps/pullryn.png", "usr/share/icons/hicolor/16x16/apps/pullryn.png", "644"],
-  ["assets/icons/linux/hicolor/24x24/apps/pullryn.png", "usr/share/icons/hicolor/24x24/apps/pullryn.png", "644"],
-  ["assets/icons/linux/hicolor/32x32/apps/pullryn.png", "usr/share/icons/hicolor/32x32/apps/pullryn.png", "644"],
-  ["assets/icons/linux/hicolor/48x48/apps/pullryn.png", "usr/share/icons/hicolor/48x48/apps/pullryn.png", "644"],
-  ["assets/icons/linux/hicolor/64x64/apps/pullryn.png", "usr/share/icons/hicolor/64x64/apps/pullryn.png", "644"],
-  ["assets/icons/linux/hicolor/128x128/apps/pullryn.png", "usr/share/icons/hicolor/128x128/apps/pullryn.png", "644"],
-  ["assets/icons/linux/hicolor/256x256/apps/pullryn.png", "usr/share/icons/hicolor/256x256/apps/pullryn.png", "644"],
-  ["assets/icons/linux/hicolor/512x512/apps/pullryn.png", "usr/share/icons/hicolor/512x512/apps/pullryn.png", "644"]
+  ["target/release/pullyt", "usr/bin/pullyt", "755"],
+  ["packaging/linux/pullyt.desktop", "usr/share/applications/pullyt.desktop", "644"],
+  ["assets/icons/linux/hicolor/16x16/apps/pullyt.png", "usr/share/icons/hicolor/16x16/apps/pullyt.png", "644"],
+  ["assets/icons/linux/hicolor/24x24/apps/pullyt.png", "usr/share/icons/hicolor/24x24/apps/pullyt.png", "644"],
+  ["assets/icons/linux/hicolor/32x32/apps/pullyt.png", "usr/share/icons/hicolor/32x32/apps/pullyt.png", "644"],
+  ["assets/icons/linux/hicolor/48x48/apps/pullyt.png", "usr/share/icons/hicolor/48x48/apps/pullyt.png", "644"],
+  ["assets/icons/linux/hicolor/64x64/apps/pullyt.png", "usr/share/icons/hicolor/64x64/apps/pullyt.png", "644"],
+  ["assets/icons/linux/hicolor/128x128/apps/pullyt.png", "usr/share/icons/hicolor/128x128/apps/pullyt.png", "644"],
+  ["assets/icons/linux/hicolor/256x256/apps/pullyt.png", "usr/share/icons/hicolor/256x256/apps/pullyt.png", "644"],
+  ["assets/icons/linux/hicolor/512x512/apps/pullyt.png", "usr/share/icons/hicolor/512x512/apps/pullyt.png", "644"]
 ]

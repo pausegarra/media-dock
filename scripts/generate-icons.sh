@@ -46,7 +46,7 @@ iconutil -c icns "$MAC_ICONSET" -o "$ICONS_DIR/macos/AppIcon.icns"
 for size in "${LINUX_SIZES[@]}"; do
   dir="$LINUX_PREFIX/${size}x${size}/apps"
   mkdir -p "$dir"
-  create_resized_png "$SOURCE_PNG" "$dir/pullryn.png" "$size"
+  create_resized_png "$SOURCE_PNG" "$dir/pullyt.png" "$size"
 done
 
 # Windows ICO
@@ -63,5 +63,5 @@ PY
 
 echo "Generated:"
 echo "- $ICONS_DIR/macos/AppIcon.icns"
-echo "- $ICONS_DIR/linux/hicolor/*/apps/pullryn.png"
+echo "- $ICONS_DIR/linux/hicolor/*/apps/pullyt.png"
 echo "- $ICONS_DIR/windows/app.ico"

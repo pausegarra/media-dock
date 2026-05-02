@@ -63,7 +63,7 @@ jobs:
       - name: Create ZIP archive
         shell: powershell
         run: |
-          Compress-Archive -Path "target/x86_64-pc-windows-msvc/release/pullryn.exe" -DestinationPath "pullryn-windows-x86_64.zip"
+          Compress-Archive -Path "target/x86_64-pc-windows-msvc/release/pullyt.exe" -DestinationPath "pullyt-windows-x86_64.zip"
 
       - name: Upload ZIP to draft release
         shell: bash
@@ -71,7 +71,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release upload "${GITHUB_REF_NAME}" \
-            "pullryn-windows-x86_64.zip" \
+            "pullyt-windows-x86_64.zip" \
             --repo "${GITHUB_REPOSITORY}" \
             --clobber
 
@@ -82,7 +82,7 @@ jobs:
           echo "ProductVersion=$version" >> $env:GITHUB_ENV
 
       - name: Build MSI
-        run: cargo wix --no-build --output pullryn-windows-x86_64.msi --nocapture
+        run: cargo wix --no-build --output pullyt-windows-x86_64.msi --nocapture
 
       - name: Upload MSI to draft release
         shell: bash
@@ -90,7 +90,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release upload "${GITHUB_REF_NAME}" \
-            "pullryn-windows-x86_64.msi" \
+            "pullyt-windows-x86_64.msi" \
             --repo "${GITHUB_REPOSITORY}" \
             --clobber
 
@@ -133,16 +133,16 @@ jobs:
         shell: bash
         env:
           TARGET: ${{ matrix.rust_target }}
-          ARCHIVE_NAME: pullryn-${{ matrix.asset_suffix }}.tar.gz
+          ARCHIVE_NAME: pullyt-${{ matrix.asset_suffix }}.tar.gz
         run: |
           cd "target/${TARGET}/release"
-          tar -czf "../../../${ARCHIVE_NAME}" "pullryn"
+          tar -czf "../../../${ARCHIVE_NAME}" "pullyt"
 
       - name: Upload tar.gz to draft release
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          ARCHIVE_NAME: pullryn-${{ matrix.asset_suffix }}.tar.gz
+          ARCHIVE_NAME: pullyt-${{ matrix.asset_suffix }}.tar.gz
         run: |
           gh release upload "${GITHUB_REF_NAME}" \
             "${ARCHIVE_NAME}" \
@@ -153,19 +153,19 @@ jobs:
         shell: bash
         env:
           TARGET: ${{ matrix.rust_target }}
-          DMG_NAME: pullryn-${{ matrix.asset_suffix }}.dmg
+          DMG_NAME: pullyt-${{ matrix.asset_suffix }}.dmg
         run: |
           rm -f "${DMG_NAME}"
           create-dmg \
-            --volname "Pullryn" \
+            --volname "Pullyt" \
             "${DMG_NAME}" \
-            "target/${TARGET}/release/bundle/osx/Pullryn.app"
+            "target/${TARGET}/release/bundle/osx/Pullyt.app"
 
       - name: Upload DMG to draft release
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          DMG_NAME: pullryn-${{ matrix.asset_suffix }}.dmg
+          DMG_NAME: pullyt-${{ matrix.asset_suffix }}.dmg
         run: |
           gh release upload "${GITHUB_REF_NAME}" \
             "${DMG_NAME}" \
@@ -196,7 +196,7 @@ jobs:
         shell: bash
         run: |
           cd "target/x86_64-unknown-linux-gnu/release"
-          tar -czf "../../../pullryn-linux-x86_64.tar.gz" "pullryn"
+          tar -czf "../../../pullyt-linux-x86_64.tar.gz" "pullyt"
 
       - name: Upload tar.gz to draft release
         shell: bash
@@ -204,7 +204,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release upload "${GITHUB_REF_NAME}" \
-            "pullryn-linux-x86_64.tar.gz" \
+            "pullyt-linux-x86_64.tar.gz" \
             --repo "${GITHUB_REPOSITORY}" \
             --clobber
 
@@ -213,7 +213,7 @@ jobs:
 
       - name: Rename DEB package
         shell: bash
-        run: mv target/x86_64-unknown-linux-gnu/debian/*.deb pullryn-linux-x86_64.deb
+        run: mv target/x86_64-unknown-linux-gnu/debian/*.deb pullyt-linux-x86_64.deb
 
       - name: Upload DEB to draft release
         shell: bash
@@ -221,6 +221,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release upload "${GITHUB_REF_NAME}" \
-            "pullryn-linux-x86_64.deb" \
+            "pullyt-linux-x86_64.deb" \
             --repo "${GITHUB_REPOSITORY}" \
             --clobber
