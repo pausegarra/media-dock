@@ -2,7 +2,7 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
   <Product
     Id="*"
-    Name="Media Dock"
+    Name="Pullryn"
     UpgradeCode="A5F8AF2B-EF89-4588-A2B5-F2B7924691D6"
     Version="$(env.ProductVersion)"
     Language="1033"
@@ -26,10 +26,10 @@
     <Property Id="ARPPRODUCTICON" Value="ProductIcon" />
     <Property Id="ARPNOMODIFY" Value="yes" />
     <Property Id="ARPNOREPAIR" Value="yes" />
-    <Property Id="ARPHELPLINK" Value="https://github.com/pausegarra/media-dock" />
-    <Property Id="ARPURLINFOABOUT" Value="https://github.com/pausegarra/media-dock" />
+    <Property Id="ARPHELPLINK" Value="https://github.com/pausegarra/pullryn" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/pausegarra/pullryn" />
 
-    <Feature Id="ProductFeature" Title="Media Dock" Level="1">
+    <Feature Id="ProductFeature" Title="Pullryn" Level="1">
       <ComponentGroupRef Id="ProductComponents" />
     </Feature>
   </Product>
@@ -38,11 +38,11 @@
     <Directory Id="TARGETDIR" Name="SourceDir">
 
       <Directory Id="ProgramFiles64Folder">
-        <Directory Id="INSTALLFOLDER" Name="Media Dock" />
+        <Directory Id="INSTALLFOLDER" Name="Pullryn" />
       </Directory>
 
       <Directory Id="ProgramMenuFolder">
-        <Directory Id="ApplicationProgramsFolder" Name="Media Dock" />
+        <Directory Id="ApplicationProgramsFolder" Name="Pullryn" />
       </Directory>
 
       <Directory Id="DesktopFolder" />
@@ -54,27 +54,27 @@
   <ComponentGroup Id="ProductComponents">
 
     <Component
-      Id="MediaDockExeComponent"
+      Id="PullrynExeComponent"
       Directory="INSTALLFOLDER"
       Guid="E2ACF926-BB4B-463E-B660-EB4DFD18F422">
 
       <File
-        Id="MediaDockExe"
-        Source="target\x86_64-pc-windows-msvc\release\media-dock.exe"
+        Id="PullrynExe"
+        Source="target\x86_64-pc-windows-msvc\release\pullryn.exe"
         KeyPath="yes" />
     </Component>
 
     <Component
-      Id="MediaDockShortcutsComponent"
+      Id="PullrynShortcutsComponent"
       Directory="ApplicationProgramsFolder"
       Guid="D6C6A6A1-8F34-4D9D-9A7E-1F7A0A3B8C11">
 
       <Shortcut
         Id="StartMenuShortcut"
         Directory="ApplicationProgramsFolder"
-        Name="Media Dock"
-        Description="Media Dock"
-        Target="[INSTALLFOLDER]media-dock.exe"
+        Name="Pullryn"
+        Description="Pullryn"
+        Target="[INSTALLFOLDER]pullryn.exe"
         WorkingDirectory="INSTALLFOLDER"
         Icon="ProductIcon"
         IconIndex="0" />
@@ -82,9 +82,9 @@
       <Shortcut
         Id="DesktopShortcut"
         Directory="DesktopFolder"
-        Name="Media Dock"
-        Description="Media Dock"
-        Target="[INSTALLFOLDER]media-dock.exe"
+        Name="Pullryn"
+        Description="Pullryn"
+        Target="[INSTALLFOLDER]pullryn.exe"
         WorkingDirectory="INSTALLFOLDER"
         Icon="ProductIcon"
         IconIndex="0" />
@@ -96,7 +96,7 @@
 
       <RegistryValue
         Root="HKCU"
-        Key="Software\pausegarra\MediaDock"
+        Key="Software\pausegarra\Pullryn"
         Name="shortcuts"
         Type="integer"
         Value="1"
