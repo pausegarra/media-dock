@@ -1,12 +1,11 @@
 <script>
+  import { getVersion } from "@tauri-apps/api/app";
   import { invoke } from "@tauri-apps/api/core";
   import { listen } from "@tauri-apps/api/event";
+  import { check } from "@tauri-apps/plugin-updater";
   import { onDestroy, onMount } from "svelte";
   import logo from "@assets/logo.svg";
 
-  let phase = "checking_updates";
-  let releaseUrl = "";
-  let latestVersion = "";
   let currentVersion = "";
 
   let url = "";
@@ -15,9 +14,10 @@
   let videoQuality = "best";
   let audioQuality = "best";
   let progress = 0;
-  let status = "Checking for updates...";
+  let status = "Starting up...";
   let dependencyInfo = "";
   let busy = true;
+  let checkingUpdates = false;
 
   let unlistenProgress;
   let unlistenComplete;
@@ -62,40 +62,6 @@
 
   async function startApp() {
     busy = true;
-    status = "Checking for updates...";
-    await yieldToPaint();
-    console.info("[startup] begin update check");
-    let update;
-    try {
-      const startedAt = Date.now();
-      update = await withTimeout(
-        invoke("check_for_updates"),
-        8000,
-        "Update check timed out"
-      );
-      console.info(`[startup] update check finished in ${Date.now() - startedAt}ms`, update);
-    } catch (_) {
-      console.warn("[startup] update check failed or timed out; continuing");
-      await continueAfterUpdateGate();
-      return;
-    }
-    currentVersion = update.currentVersion;
-
-    if (update.updateAvailable) {
-      phase = "update_gate";
-      releaseUrl = update.releaseUrl ?? "";
-      latestVersion = update.latestVersion ?? "";
-      status = "A new version is available.";
-      busy = false;
-      return;
-    }
-
-    await continueAfterUpdateGate();
-  }
-
-  async function continueAfterUpdateGate() {
-    phase = "main";
-    busy = true;
     status = "Bootstrapping dependencies...";
     await yieldToPaint();
     console.info("[startup] bootstrap dependencies begin");
@@ -110,6 +76,67 @@
       status = `Dependency error: ${String(error)}`;
     } finally {
       busy = false;
+    }
+  }
+
+  async function onCheckForUpdates() {
+    checkingUpdates = true;
+    status = "Checking for updates...";
+    try {
+      const update = await withTimeout(check(), 15000, "Update check timed out");
+
+      if (!update) {
+        status = "You are on the latest version.";
+        return;
+      }
+
+      const confirmed = window.confirm(
+        `A new version (${update.version}) is available. Download and install now?`
+      );
+
+      if (!confirmed) {
+        status = `Update available: v${update.version}`;
+        return;
+      }
+
+      status = `Downloading v${update.version}...`;
+      await update.downloadAndInstall();
+      status = `Update installed (v${update.version}). Restart Pullyt to apply it.`;
+    } catch (error) {
+      status = `Update check failed: ${String(error)}`;
+    } finally {
+      checkingUpdates = false;
+    }
+  }
+
+  async function checkForUpdatesSilently() {
+    if (checkingUpdates) {
+      return;
+    }
+
+    checkingUpdates = true;
+    try {
+      const update = await withTimeout(check(), 10000, "Silent update check timed out");
+      if (!update) {
+        return;
+      }
+
+      status = `Update available: v${update.version}`;
+      const confirmed = window.confirm(
+        `A new version (${update.version}) is available. Download and install now?`
+      );
+
+      if (!confirmed) {
+        return;
+      }
+
+      status = `Downloading v${update.version}...`;
+      await update.downloadAndInstall();
+      status = `Update installed (v${update.version}). Restart Pullyt to apply it.`;
+    } catch (error) {
+      console.warn("[updates] silent update check skipped", error);
+    } finally {
+      checkingUpdates = false;
     }
   }
 
@@ -132,10 +159,6 @@
       busy = false;
       status = `Download failed: ${String(error)}`;
     }
-  }
-
-  async function onOpenRelease() {
-    await invoke("open_release_link", { url: releaseUrl });
   }
 
   async function onOpenGithub() {
@@ -171,12 +194,13 @@
     }
 
     try {
+      currentVersion = await getVersion();
       await startApp();
+      await checkForUpdatesSilently();
     } catch (error) {
       console.error("[startup] startApp failed", error);
       busy = false;
       status = `Startup failed: ${String(error)}`;
-      phase = "main";
     }
   });
 
@@ -190,73 +214,61 @@
   });
 </script>
 
-{#if phase === "update_gate"}
-  <main class="shell center">
-    <section class="update-card">
-      <img class="logo update-logo" src={logo} alt="Pullyt" />
-      <h1>Update available</h1>
-      <p>Installed version: v{currentVersion}</p>
-      <p>Latest version: v{latestVersion}</p>
-      <div class="actions">
-        <button class="primary" on:click={onOpenRelease}>Download update</button>
-        <button on:click={continueAfterUpdateGate}>Not now</button>
-      </div>
-    </section>
-  </main>
-{:else}
-  <main class="shell">
-    <section class="app-card">
-      <img class="logo" src={logo} alt="Pullyt" />
+<main class="shell">
+  <section class="app-card">
+    <img class="logo" src={logo} alt="Pullyt" />
 
-      <div class="provider">YouTube</div>
+    <div class="provider">YouTube</div>
 
-      <input class="url-input" type="text" bind:value={url} placeholder="Paste YouTube URL" />
+    <input class="url-input" type="text" bind:value={url} placeholder="Paste YouTube URL" />
 
+    <div class="row radios">
+      {#each modeOptions as option}
+        <label><input type="radio" bind:group={mode} value={option.value} /> {option.label}</label>
+      {/each}
+    </div>
+
+    {#if mode === "video_with_audio"}
       <div class="row radios">
-        {#each modeOptions as option}
-          <label><input type="radio" bind:group={mode} value={option.value} /> {option.label}</label>
+        <span class="field">Preset</span>
+        {#each presetOptions as option}
+          <label><input type="radio" bind:group={preset} value={option.value} /> {option.label}</label>
         {/each}
       </div>
+    {/if}
 
-      {#if mode === "video_with_audio"}
-        <div class="row radios">
-          <span class="field">Preset</span>
-          {#each presetOptions as option}
-            <label><input type="radio" bind:group={preset} value={option.value} /> {option.label}</label>
-          {/each}
+    <div class="row radios">
+      <span class="field">Video</span>
+      {#each videoOptions as option}
+        <label><input type="radio" bind:group={videoQuality} value={option.value} /> {option.label}</label>
+      {/each}
+    </div>
+
+    <div class="row radios">
+      <span class="field">Audio</span>
+      {#each audioOptions as option}
+        <label><input type="radio" bind:group={audioQuality} value={option.value} /> {option.label}</label>
+      {/each}
+    </div>
+
+    <p class="status">{status}</p>
+
+    <progress max="1" value={progress}></progress>
+
+    <button class="primary" disabled={busy} on:click={onDownload}>{busy ? "Working..." : "Download"}</button>
+    <button disabled={checkingUpdates} on:click={onCheckForUpdates}>
+      {checkingUpdates ? "Checking updates..." : "Check for updates"}
+    </button>
+
+    <footer>
+      <pre>{dependencyInfo}</pre>
+      <div class="meta-row">
+        <span class="version">v{currentVersion || "1.0.0"}</span>
+        <div class="dev">
+          <span>developed by Pau Segarra</span>
+          <button class="link" on:click={onOpenGithub}>Github</button>
         </div>
-      {/if}
-
-      <div class="row radios">
-        <span class="field">Video</span>
-        {#each videoOptions as option}
-          <label><input type="radio" bind:group={videoQuality} value={option.value} /> {option.label}</label>
-        {/each}
       </div>
-
-      <div class="row radios">
-        <span class="field">Audio</span>
-        {#each audioOptions as option}
-          <label><input type="radio" bind:group={audioQuality} value={option.value} /> {option.label}</label>
-        {/each}
-      </div>
-
-      <p class="status">{status}</p>
-
-      <progress max="1" value={progress}></progress>
-
-      <button class="primary" disabled={busy} on:click={onDownload}>{busy ? "Working..." : "Download"}</button>
-
-      <footer>
-        <pre>{dependencyInfo}</pre>
-        <div class="meta-row">
-          <span class="version">v{currentVersion || "1.0.0"}</span>
-          <div class="dev">
-            <span>developed by Pau Segarra</span>
-            <button class="link" on:click={onOpenGithub}>Github</button>
-          </div>
-        </div>
-      </footer>
-    </section>
-  </main>
-{/if}
+    </footer>
+  </section>
+</main>

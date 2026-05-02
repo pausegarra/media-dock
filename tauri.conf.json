@@ -24,7 +24,8 @@
   },
   "bundle": {
     "active": true,
-    "targets": "all",
+    "targets": ["nsis", "app", "appimage"],
+    "createUpdaterArtifacts": true,
     "icon": [
       "assets/icons/windows/app.ico",
       "assets/icons/macos/AppIcon.icns",
@@ -35,9 +36,16 @@
       "minimumSystemVersion": "10.15"
     },
     "windows": {
-      "wix": {
-        "template": "wix/main.wxs"
+      "nsis": {
+        "installMode": "both",
+        "displayLanguageSelector": true
       }
+    }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEExNUUwNjEzM0QzQjNBMTAKUldRUU9qczlFd1plb1Jrb2l4K0xISEdsbEhCZnpjL2JiYXZnNGpYTWNDQnB1Z1FTQzVnWkZsZTgK",
+      "endpoints": ["https://github.com/pausegarra/pullyt/releases/latest/download/latest.json"]
     }
   }
 }

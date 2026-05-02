@@ -4,14 +4,13 @@ use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter};
 
 use crate::modules::downloader::application::use_cases::{
-    BootstrapDependenciesUseCase, CheckForUpdatesUseCase, DownloadMediaUseCase,
+    BootstrapDependenciesUseCase, DownloadMediaUseCase,
 };
 use crate::modules::downloader::domain::entities::{
     AudioQuality, DownloadMode, DownloadPreset, DownloadProgress, DownloadRequest, Provider,
-    UpdateStatus, VideoQuality,
+    VideoQuality,
 };
 use crate::modules::downloader::infrastructure::dependencies::SystemDependencies;
-use crate::modules::downloader::infrastructure::github_releases::GitHubReleaseAdapter;
 use crate::modules::downloader::infrastructure::save_dialog::NativeSaveDialog;
 use crate::modules::downloader::infrastructure::yt_dlp::YtDlpAdapter;
 
@@ -23,15 +22,6 @@ pub struct DownloadRequestPayload {
     preset: String,
     video_quality: String,
     audio_quality: String,
-}
-
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-struct UpdateGatePayload {
-    update_available: bool,
-    release_url: Option<String>,
-    latest_version: Option<String>,
-    current_version: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -116,42 +106,6 @@ fn parse_audio_quality(value: &str) -> Result<AudioQuality, String> {
 }
 
 #[tauri::command]
-async fn check_for_updates() -> Result<UpdateGatePayload, String> {
-    let current_version = env!("CARGO_PKG_VERSION").to_string();
-    eprintln!("[updates] check_for_updates: start current_version={current_version}");
-
-    let (status, current_version) = tauri::async_runtime::spawn_blocking(move || {
-        eprintln!("[updates] worker: building use case");
-        let release_port = Arc::new(GitHubReleaseAdapter);
-        let use_case = CheckForUpdatesUseCase::new(release_port, current_version.clone());
-        let result = use_case.execute();
-        eprintln!("[updates] worker: execute finished status={result:?}");
-        (result, current_version)
-    })
-    .await
-    .map_err(|e| format!("update check panicked: {e}"))?;
-
-    eprintln!("[updates] main: resolved status={status:?}");
-
-    let payload = match status {
-        UpdateStatus::UpToDate => UpdateGatePayload {
-            update_available: false,
-            release_url: None,
-            latest_version: None,
-            current_version,
-        },
-        UpdateStatus::UpdateAvailable(release) => UpdateGatePayload {
-            update_available: true,
-            release_url: Some(release.url),
-            latest_version: Some(release.version),
-            current_version,
-        },
-    };
-    eprintln!("[updates] check_for_updates: returning payload");
-    Ok(payload)
-}
-
-#[tauri::command]
 async fn bootstrap_dependencies() -> Result<DependencyReportPayload, String> {
     eprintln!("[deps] bootstrap_dependencies: start");
 
@@ -172,11 +126,6 @@ async fn bootstrap_dependencies() -> Result<DependencyReportPayload, String> {
 
     eprintln!("[deps] bootstrap_dependencies: completed");
     result
-}
-
-#[tauri::command]
-fn open_release_link(url: String) {
-    let _ = open::that(url);
 }
 
 #[tauri::command]
@@ -218,10 +167,9 @@ fn start_download(app: AppHandle, payload: DownloadRequestPayload) -> Result<(),
 pub fn run() {
     eprintln!("[startup] tauri_app::run starting");
     tauri::Builder::default()
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .invoke_handler(tauri::generate_handler![
-            check_for_updates,
             bootstrap_dependencies,
-            open_release_link,
             open_github,
             start_download,
         ])

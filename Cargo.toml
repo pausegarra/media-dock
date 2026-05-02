@@ -15,6 +15,7 @@ ureq = { version = "2", default-features = true, features = ["json"] }
 zip = { version = "2", default-features = false, features = ["deflate"] }
 tar = "0.4"
 xz2 = "0.1"
+tauri-plugin-updater = "2.10.1"
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
