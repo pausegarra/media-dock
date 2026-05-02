@@ -51,61 +51,59 @@
   </Fragment>
 
   <Fragment>
-    <ComponentGroup Id="ProductComponents">
+  <ComponentGroup Id="ProductComponents">
 
-      <Component
-        Id="MediaDockExeComponent"
-        Directory="INSTALLFOLDER"
-        Guid="E2ACF926-BB4B-463E-B660-EB4DFD18F422">
+    <Component
+      Id="MediaDockExeComponent"
+      Directory="INSTALLFOLDER"
+      Guid="E2ACF926-BB4B-463E-B660-EB4DFD18F422">
 
-        <File
-          Id="MediaDockExe"
-          Source="target\x86_64-pc-windows-msvc\release\media-dock.exe"
-          KeyPath="yes" />
+      <File
+        Id="MediaDockExe"
+        Source="target\x86_64-pc-windows-msvc\release\media-dock.exe"
+        KeyPath="yes" />
+    </Component>
 
-        <!-- Start menu shortcut -->
-        <Shortcut
-          Id="StartMenuShortcut"
-          Directory="ApplicationProgramsFolder"
-          Name="Media Dock"
-          Description="Media Dock"
-          Target="[INSTALLFOLDER]media-dock.exe"
-          WorkingDirectory="INSTALLFOLDER"
-          Icon="ProductIcon"
-          IconIndex="0" />
+    <Component
+      Id="MediaDockShortcutsComponent"
+      Directory="ApplicationProgramsFolder"
+      Guid="D6C6A6A1-8F34-4D9D-9A7E-1F7A0A3B8C11">
 
-        <!-- Desktop shortcut -->
-        <Shortcut
-          Id="DesktopShortcut"
-          Directory="DesktopFolder"
-          Name="Media Dock"
-          Description="Media Dock"
-          Target="[INSTALLFOLDER]media-dock.exe"
-          WorkingDirectory="INSTALLFOLDER"
-          Icon="ProductIcon"
-          IconIndex="0" />
-
-      </Component>
-
-      <Component
-        Id="ApplicationProgramsFolderComponent"
+      <Shortcut
+        Id="StartMenuShortcut"
         Directory="ApplicationProgramsFolder"
-        Guid="D6C6A6A1-8F34-4D9D-9A7E-1F7A0A3B8C11">
+        Name="Media Dock"
+        Description="Media Dock"
+        Target="[INSTALLFOLDER]media-dock.exe"
+        WorkingDirectory="INSTALLFOLDER"
+        Icon="ProductIcon"
+        IconIndex="0" />
 
-        <RemoveFolder
-          Id="RemoveApplicationProgramsFolder"
-          On="uninstall" />
+      <Shortcut
+        Id="DesktopShortcut"
+        Directory="DesktopFolder"
+        Name="Media Dock"
+        Description="Media Dock"
+        Target="[INSTALLFOLDER]media-dock.exe"
+        WorkingDirectory="INSTALLFOLDER"
+        Icon="ProductIcon"
+        IconIndex="0" />
 
-        <RegistryValue
-          Root="HKCU"
-          Key="Software\pausegarra\MediaDock"
-          Name="installed"
-          Type="integer"
-          Value="1"
-          KeyPath="yes" />
+      <RemoveFolder
+        Id="RemoveApplicationProgramsFolder"
+        Directory="ApplicationProgramsFolder"
+        On="uninstall" />
 
-      </Component>
+      <RegistryValue
+        Root="HKCU"
+        Key="Software\pausegarra\MediaDock"
+        Name="shortcuts"
+        Type="integer"
+        Value="1"
+        KeyPath="yes" />
 
-    </ComponentGroup>
-  </Fragment>
+    </Component>
+
+  </ComponentGroup>
+</Fragment>
 </Wix>
