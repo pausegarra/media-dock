@@ -3,7 +3,7 @@
   <Product
     Id="*"
     Name="Media Dock"
-    UpgradeCode="a5f8af2b-ef89-4588-a2b5-f2b7924691d6"
+    UpgradeCode="A5F8AF2B-EF89-4588-A2B5-F2B7924691D6"
     Version="$(env.ProductVersion)"
     Language="1033"
     Manufacturer="pausegarra">
@@ -22,8 +22,8 @@
     <MediaTemplate EmbedCab="yes" />
 
     <Icon Id="ProductIcon" SourceFile="assets\icons\windows\app.ico" />
-    <Property Id="ARPPRODUCTICON" Value="ProductIcon" />
 
+    <Property Id="ARPPRODUCTICON" Value="ProductIcon" />
     <Property Id="ARPNOMODIFY" Value="yes" />
     <Property Id="ARPNOREPAIR" Value="yes" />
     <Property Id="ARPHELPLINK" Value="https://github.com/pausegarra/media-dock" />
@@ -36,6 +36,7 @@
 
   <Fragment>
     <Directory Id="TARGETDIR" Name="SourceDir">
+
       <Directory Id="ProgramFiles64Folder">
         <Directory Id="INSTALLFOLDER" Name="Media Dock" />
       </Directory>
@@ -45,19 +46,26 @@
       </Directory>
 
       <Directory Id="DesktopFolder" />
+
     </Directory>
   </Fragment>
 
   <Fragment>
     <ComponentGroup Id="ProductComponents">
-      <Component Id="MediaDockExeComponent" Directory="INSTALLFOLDER" Guid="e2acf926-bb4b-463e-b660-eb4dfd18f422">
+
+      <Component
+        Id="MediaDockExeComponent"
+        Directory="INSTALLFOLDER"
+        Guid="E2ACF926-BB4B-463E-B660-EB4DFD18F422">
+
         <File
           Id="MediaDockExe"
           Source="target\x86_64-pc-windows-msvc\release\media-dock.exe"
           KeyPath="yes" />
 
+        <!-- Start menu shortcut -->
         <Shortcut
-          Id="ApplicationStartMenuShortcut"
+          Id="StartMenuShortcut"
           Directory="ApplicationProgramsFolder"
           Name="Media Dock"
           Description="Media Dock"
@@ -65,18 +73,39 @@
           WorkingDirectory="INSTALLFOLDER"
           Icon="ProductIcon"
           IconIndex="0" />
+
+        <!-- Desktop shortcut -->
+        <Shortcut
+          Id="DesktopShortcut"
+          Directory="DesktopFolder"
+          Name="Media Dock"
+          Description="Media Dock"
+          Target="[INSTALLFOLDER]media-dock.exe"
+          WorkingDirectory="INSTALLFOLDER"
+          Icon="ProductIcon"
+          IconIndex="0" />
+
       </Component>
 
-      <Component Id="ApplicationProgramsFolderComponent" Directory="ApplicationProgramsFolder" Guid="6e132fac-6f0c-4a1a-a3bd-0fb92d35bc44d">
-        <RemoveFolder Id="RemoveApplicationProgramsFolder" On="uninstall" />
+      <Component
+        Id="ApplicationProgramsFolderComponent"
+        Directory="ApplicationProgramsFolder"
+        Guid="D6C6A6A1-8F34-4D9D-9A7E-1F7A0A3B8C11">
+
+        <RemoveFolder
+          Id="RemoveApplicationProgramsFolder"
+          On="uninstall" />
+
         <RegistryValue
           Root="HKCU"
-          Key="Software\pausegarra\Media Dock"
+          Key="Software\pausegarra\MediaDock"
           Name="installed"
           Type="integer"
           Value="1"
           KeyPath="yes" />
+
       </Component>
+
     </ComponentGroup>
   </Fragment>
 </Wix>
