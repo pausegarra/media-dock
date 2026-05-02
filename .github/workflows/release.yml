@@ -129,13 +129,6 @@ jobs:
       - name: Build app bundle
         run: cargo bundle --release --target ${{ matrix.rust_target }}
 
-      - name: Ad-hoc sign macOS app bundle
-        shell: bash
-        env:
-          TARGET: ${{ matrix.rust_target }}
-        run: |
-          codesign --sign - --force --deep --options runtime "target/${TARGET}/release/bundle/osx/Media Dock.app"
-
       - name: Create tar.gz archive
         shell: bash
         env:
