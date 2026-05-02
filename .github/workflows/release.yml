@@ -22,205 +22,56 @@ jobs:
             exit 1
           fi
 
-  create-release:
-    name: Create draft release
+  build-and-release:
+    name: Build ${{ matrix.platform }}
     needs: [validate-tag]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Create GitHub release (draft)
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release create "${GITHUB_REF_NAME}" \
-            --repo "${GITHUB_REPOSITORY}" \
-            --title "${GITHUB_REF_NAME}" \
-            --draft
-
-  package-msi:
-    name: Package MSI
-    needs: [create-release]
-    runs-on: windows-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: x86_64-pc-windows-msvc
-
-      - name: Install WiX Toolset
-        shell: powershell
-        run: choco install wixtoolset -y
-
-      - name: Install cargo-wix
-        run: cargo install cargo-wix --locked
-
-      - name: Build release binary
-        run: cargo build --release --target x86_64-pc-windows-msvc
-
-      - name: Create ZIP archive
-        shell: powershell
-        run: |
-          Compress-Archive -Path "target/x86_64-pc-windows-msvc/release/pullyt.exe" -DestinationPath "pullyt-windows-x86_64.zip"
-
-      - name: Upload ZIP to draft release
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release upload "${GITHUB_REF_NAME}" \
-            "pullyt-windows-x86_64.zip" \
-            --repo "${GITHUB_REPOSITORY}" \
-            --clobber
-
-      - name: Get Cargo version
-        shell: pwsh
-        run: |
-          $version = (cargo metadata --no-deps --format-version 1 | ConvertFrom-Json).packages[0].version
-          echo "ProductVersion=$version" >> $env:GITHUB_ENV
-
-      - name: Build MSI
-        run: cargo wix --no-build --output pullyt-windows-x86_64.msi --nocapture
-
-      - name: Upload MSI to draft release
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release upload "${GITHUB_REF_NAME}" \
-            "pullyt-windows-x86_64.msi" \
-            --repo "${GITHUB_REPOSITORY}" \
-            --clobber
-
-  package-dmg:
-    name: Package DMG ${{ matrix.asset_suffix }}
-    needs: [create-release]
     strategy:
       fail-fast: false
       matrix:
         include:
-          - runner: macos-15-intel
-            rust_target: x86_64-apple-darwin
-            asset_suffix: macos-x86_64
+          - platform: macos-latest
+            target: aarch64-apple-darwin
+          - platform: macos-15-intel
+            target: x86_64-apple-darwin
+          - platform: ubuntu-22.04
+          - platform: windows-latest
 
-          - runner: macos-latest
-            rust_target: aarch64-apple-darwin
-            asset_suffix: macos-arm64
-
-    runs-on: ${{ matrix.runner }}
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.rust_target }}
-
-      - name: Install packaging tools
-        shell: bash
-        run: |
-          cargo install cargo-bundle --locked
-          brew install create-dmg
-
-      - name: Build app bundle
-        run: cargo bundle --release --target ${{ matrix.rust_target }}
-
-      - name: Create tar.gz archive
-        shell: bash
-        env:
-          TARGET: ${{ matrix.rust_target }}
-          ARCHIVE_NAME: pullyt-${{ matrix.asset_suffix }}.tar.gz
-        run: |
-          cd "target/${TARGET}/release"
-          tar -czf "../../../${ARCHIVE_NAME}" "pullyt"
-
-      - name: Upload tar.gz to draft release
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-          ARCHIVE_NAME: pullyt-${{ matrix.asset_suffix }}.tar.gz
-        run: |
-          gh release upload "${GITHUB_REF_NAME}" \
-            "${ARCHIVE_NAME}" \
-            --repo "${GITHUB_REPOSITORY}" \
-            --clobber
-
-      - name: Build DMG package
-        shell: bash
-        env:
-          TARGET: ${{ matrix.rust_target }}
-          DMG_NAME: pullyt-${{ matrix.asset_suffix }}.dmg
-        run: |
-          rm -f "${DMG_NAME}"
-          create-dmg \
-            --volname "Pullyt" \
-            "${DMG_NAME}" \
-            "target/${TARGET}/release/bundle/osx/Pullyt.app"
-
-      - name: Upload DMG to draft release
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-          DMG_NAME: pullyt-${{ matrix.asset_suffix }}.dmg
-        run: |
-          gh release upload "${GITHUB_REF_NAME}" \
-            "${DMG_NAME}" \
-            --repo "${GITHUB_REPOSITORY}" \
-            --clobber
-
-  package-deb:
-    name: Package DEB
-    needs: [create-release]
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.platform }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Linux system dependencies
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libgtk-3-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            patchelf
+
+      - name: Install UI dependencies
+        run: npm ci --prefix ui
+
+      - name: Build and upload Tauri release
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          targets: x86_64-unknown-linux-gnu
-
-      - name: Install cargo-deb
-        run: cargo install cargo-deb --locked
-
-      - name: Build release binary
-        run: cargo build --release --target x86_64-unknown-linux-gnu
-
-      - name: Create tar.gz archive
-        shell: bash
-        run: |
-          cd "target/x86_64-unknown-linux-gnu/release"
-          tar -czf "../../../pullyt-linux-x86_64.tar.gz" "pullyt"
-
-      - name: Upload tar.gz to draft release
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release upload "${GITHUB_REF_NAME}" \
-            "pullyt-linux-x86_64.tar.gz" \
-            --repo "${GITHUB_REPOSITORY}" \
-            --clobber
-
-      - name: Build DEB package
-        run: cargo deb --no-build --target x86_64-unknown-linux-gnu
-
-      - name: Rename DEB package
-        shell: bash
-        run: mv target/x86_64-unknown-linux-gnu/debian/*.deb pullyt-linux-x86_64.deb
-
-      - name: Upload DEB to draft release
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release upload "${GITHUB_REF_NAME}" \
-            "pullyt-linux-x86_64.deb" \
-            --repo "${GITHUB_REPOSITORY}" \
-            --clobber
+          tagName: ${{ github.ref_name }}
+          releaseName: "${{ github.ref_name }}"
+          releaseBody: "Automated release for ${{ github.ref_name }}"
+          releaseDraft: true
+          prerelease: false
+          args: ${{ matrix.target && '--target ' || '' }}${{ matrix.target || '' }}
