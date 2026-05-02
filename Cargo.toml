@@ -18,6 +18,3 @@ xz2 = "0.1"
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
-
-[target.'cfg(windows)'.build-dependencies]
-winres = "0.1"
