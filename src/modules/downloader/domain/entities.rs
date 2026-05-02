@@ -53,3 +53,15 @@ pub struct DownloadProgress {
     pub fraction: f32,
     pub message: String,
 }
+
+#[derive(Debug, Clone)]
+pub struct ReleaseInfo {
+    pub version: String,
+    pub url: String,
+}
+
+#[derive(Debug, Clone)]
+pub enum UpdateStatus {
+    UpToDate,
+    UpdateAvailable(ReleaseInfo),
+}

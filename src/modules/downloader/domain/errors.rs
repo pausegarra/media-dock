@@ -14,4 +14,6 @@ pub enum DownloaderError {
     SaveCanceled,
     #[error("process failed: {0}")]
     ProcessFailed(String),
+    #[error("release check failed: {0}")]
+    ReleaseCheckFailed(String),
 }

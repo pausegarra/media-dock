@@ -1,4 +1,4 @@
-use super::entities::{DownloadMode, DownloadPreset, DownloadProgress, DownloadRequest};
+use super::entities::{DownloadMode, DownloadPreset, DownloadProgress, DownloadRequest, ReleaseInfo};
 use super::errors::DownloaderError;
 
 pub trait DependencyPort: Send + Sync {
@@ -25,4 +25,8 @@ pub trait DownloadPort: Send + Sync {
     ) -> Result<(), DownloaderError>;
 
     fn get_title(&self, url: &str) -> Result<String, DownloaderError>;
+}
+
+pub trait ReleasePort: Send + Sync {
+    fn fetch_latest_release(&self) -> Result<ReleaseInfo, DownloaderError>;
 }
