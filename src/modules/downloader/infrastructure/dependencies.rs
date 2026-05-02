@@ -4,7 +4,7 @@ use std::io::{Cursor, Read};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 #[cfg(target_os = "macos")]
 use serde_json::Value;
@@ -17,7 +17,7 @@ use zip::ZipArchive;
 use crate::modules::downloader::domain::errors::DownloaderError;
 use crate::modules::downloader::domain::ports::DependencyPort;
 
-const USER_AGENT: &str = "pullyt dependency bootstrap";
+const DEPENDENCY_CONNECT_TIMEOUT_SECS: u64 = 8;
 
 pub struct SystemDependencies;
 
@@ -264,25 +264,71 @@ fn local_ffmpeg_readme_path() -> PathBuf {
     local_bin_dir().join("ffmpeg.README")
 }
 
-fn http_client() -> ureq::Agent {
-    ureq::AgentBuilder::new()
-        .user_agent(USER_AGENT)
-        .build()
-}
-
 fn download_bytes(url: &str) -> Result<Vec<u8>, DownloaderError> {
-    let client = http_client();
-    let response = client
-        .get(url)
-        .call()
-        .map_err(|e| DownloaderError::ProcessFailed(format!("download failed ({url}): {e}")))?;
+    eprintln!("[deps] download start: {url}");
+    let started = Instant::now();
 
-    let mut reader = response.into_reader();
-    let mut out = Vec::new();
-    reader
-        .read_to_end(&mut out)
-        .map_err(|e| DownloaderError::ProcessFailed(e.to_string()))?;
-    Ok(out)
+    let tmp_path = local_bin_dir().join(".download_tmp");
+    if tmp_path.exists() {
+        let _ = fs::remove_file(&tmp_path);
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        let script = format!(
+            "iwr '{}' -OutFile '{}'",
+            url,
+            tmp_path.display()
+        );
+        let status = command_with_hidden_window(Command::new("powershell"))
+            .arg("-Command")
+            .arg(&script)
+            .status()
+            .map_err(|e| DownloaderError::ProcessFailed(format!("download failed ({url}): {e}")))?;
+        if !status.success() {
+            let _ = fs::remove_file(&tmp_path);
+            return Err(DownloaderError::ProcessFailed(format!(
+                "download failed ({url}): powershell exited with {status}"
+            )));
+        }
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    {
+        let status = command_with_hidden_window(Command::new("curl"))
+            .args([
+                "-L",
+                "-f",
+                "--connect-timeout",
+                &DEPENDENCY_CONNECT_TIMEOUT_SECS.to_string(),
+                "--max-time",
+                "300",
+                "-o",
+            ])
+            .arg(tmp_path.display().to_string())
+            .arg(url)
+            .status()
+            .map_err(|e| DownloaderError::ProcessFailed(format!("download failed ({url}): {e}")))?;
+        if !status.success() {
+            let _ = fs::remove_file(&tmp_path);
+            return Err(DownloaderError::ProcessFailed(format!(
+                "download failed ({url}): curl exited with {status}"
+            )));
+        }
+    }
+
+    let data = fs::read(&tmp_path).map_err(|e| {
+        DownloaderError::ProcessFailed(format!("failed to read downloaded file: {e}"))
+    })?;
+    let _ = fs::remove_file(&tmp_path);
+
+    let elapsed = started.elapsed();
+    eprintln!(
+        "[deps] download complete: {url} ({} bytes in {:.1}s)",
+        data.len(),
+        elapsed.as_secs_f64()
+    );
+    Ok(data)
 }
 
 #[cfg(unix)]
