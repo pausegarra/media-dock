@@ -36,32 +36,72 @@ jobs:
             --title "${GITHUB_REF_NAME}" \
             --draft
 
-  build:
-    name: Build ${{ matrix.asset_suffix }}
+  package-msi:
+    name: Package MSI
+    needs: [create-release]
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - name: Install WiX Toolset
+        shell: powershell
+        run: choco install wixtoolset -y
+
+      - name: Install cargo-wix
+        run: cargo install cargo-wix --locked
+
+      - name: Build release binary
+        run: cargo build --release --target x86_64-pc-windows-msvc
+
+      - name: Create ZIP archive
+        shell: powershell
+        run: |
+          Compress-Archive -Path "target/x86_64-pc-windows-msvc/release/media-dock.exe" -DestinationPath "media-dock-windows-x86_64.zip"
+
+      - name: Upload ZIP to draft release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "${GITHUB_REF_NAME}" \
+            "media-dock-windows-x86_64.zip" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --clobber
+
+      - name: Build MSI package
+        run: cargo wix --no-build --input wix/main.wxs --output media-dock-windows-x86_64.msi
+
+      - name: Upload MSI to draft release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "${GITHUB_REF_NAME}" \
+            "media-dock-windows-x86_64.msi" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --clobber
+
+  package-dmg:
+    name: Package DMG ${{ matrix.asset_suffix }}
     needs: [create-release]
     strategy:
       fail-fast: false
       matrix:
         include:
-          - runner: ubuntu-latest
-            rust_target: x86_64-unknown-linux-gnu
-            asset_suffix: linux-x86_64
-            archive: tar.gz
-
           - runner: macos-15-intel
             rust_target: x86_64-apple-darwin
             asset_suffix: macos-x86_64
-            archive: tar.gz
 
           - runner: macos-latest
             rust_target: aarch64-apple-darwin
             asset_suffix: macos-arm64
-            archive: tar.gz
-
-          - runner: windows-latest
-            rust_target: x86_64-pc-windows-msvc
-            asset_suffix: windows-x86_64
-            archive: zip
 
     runs-on: ${{ matrix.runner }}
 
@@ -74,46 +114,108 @@ jobs:
         with:
           targets: ${{ matrix.rust_target }}
 
-      - name: Build release binary
-        run: cargo build --release --target ${{ matrix.rust_target }}
+      - name: Install packaging tools
+        shell: bash
+        run: |
+          cargo install cargo-bundle --locked
+          brew install create-dmg
 
-      - name: Create archive (unix)
-        if: matrix.archive != 'zip'
+      - name: Build app bundle
+        run: cargo bundle --release --target ${{ matrix.rust_target }}
+
+      - name: Create tar.gz archive
         shell: bash
         env:
-          ARTIFACT_NAME: media-dock-${{ matrix.asset_suffix }}.${{ matrix.archive }}
+          TARGET: ${{ matrix.rust_target }}
+          ARCHIVE_NAME: media-dock-${{ matrix.asset_suffix }}.tar.gz
         run: |
-          cd "target/${{ matrix.rust_target }}/release"
-          tar -czf "../../../${ARTIFACT_NAME}" "media-dock"
+          cd "target/${TARGET}/release"
+          tar -czf "../../../${ARCHIVE_NAME}" "media-dock"
 
-      - name: Create archive (windows)
-        if: matrix.archive == 'zip'
-        shell: powershell
-        run: |
-          $name = "media-dock-${{ matrix.asset_suffix }}.${{ matrix.archive }}"
-          Compress-Archive -Path "target/${{ matrix.rust_target }}/release/media-dock.exe" -DestinationPath "$name"
-
-      - name: Upload asset to draft release
+      - name: Upload tar.gz to draft release
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          ARTIFACT_NAME: media-dock-${{ matrix.asset_suffix }}.${{ matrix.archive }}
+          ARCHIVE_NAME: media-dock-${{ matrix.asset_suffix }}.tar.gz
         run: |
           gh release upload "${GITHUB_REF_NAME}" \
-            "${ARTIFACT_NAME}" \
+            "${ARCHIVE_NAME}" \
             --repo "${GITHUB_REPOSITORY}" \
             --clobber
 
-      - name: Remove generated archive (unix)
-        if: always() && matrix.archive != 'zip'
+      - name: Build DMG package
         shell: bash
         env:
-          ARTIFACT_NAME: media-dock-${{ matrix.asset_suffix }}.${{ matrix.archive }}
-        run: rm -f "${ARTIFACT_NAME}"
-
-      - name: Remove generated archive (windows)
-        if: always() && matrix.archive == 'zip'
-        shell: powershell
+          TARGET: ${{ matrix.rust_target }}
+          DMG_NAME: media-dock-${{ matrix.asset_suffix }}.dmg
         run: |
-          $name = "media-dock-${{ matrix.asset_suffix }}.${{ matrix.archive }}"
-          Remove-Item -Path "$name" -Force -ErrorAction SilentlyContinue
+          APP_DIR="target/${TARGET}/release/bundle/osx"
+          create-dmg \
+            --overwrite \
+            --dmg-title "Media Dock" \
+            "${DMG_NAME}" \
+            "${APP_DIR}"
+
+      - name: Upload DMG to draft release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DMG_NAME: media-dock-${{ matrix.asset_suffix }}.dmg
+        run: |
+          gh release upload "${GITHUB_REF_NAME}" \
+            "${DMG_NAME}" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --clobber
+
+  package-deb:
+    name: Package DEB
+    needs: [create-release]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-unknown-linux-gnu
+
+      - name: Install cargo-deb
+        run: cargo install cargo-deb --locked
+
+      - name: Build release binary
+        run: cargo build --release --target x86_64-unknown-linux-gnu
+
+      - name: Create tar.gz archive
+        shell: bash
+        run: |
+          cd "target/x86_64-unknown-linux-gnu/release"
+          tar -czf "../../../media-dock-linux-x86_64.tar.gz" "media-dock"
+
+      - name: Upload tar.gz to draft release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "${GITHUB_REF_NAME}" \
+            "media-dock-linux-x86_64.tar.gz" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --clobber
+
+      - name: Build DEB package
+        run: cargo deb --no-build --target x86_64-unknown-linux-gnu
+
+      - name: Rename DEB package
+        shell: bash
+        run: mv "target/x86_64-unknown-linux-gnu/debian/media-dock_${GITHUB_REF_NAME}_amd64.deb" "media-dock-linux-x86_64.deb"
+
+      - name: Upload DEB to draft release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "${GITHUB_REF_NAME}" \
+            "media-dock-linux-x86_64.deb" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --clobber
