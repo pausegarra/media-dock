@@ -1,8 +1,8 @@
 [Desktop Entry]
 Type=Application
-Name=Media Dock
+Name=Pullryn
 Comment=Download media using yt-dlp with bundled FFmpeg encoding
-Exec=media-dock
-Icon=media-dock
+Exec=pullryn
+Icon=pullryn
 Terminal=false
 Categories=Utility;AudioVideo;
