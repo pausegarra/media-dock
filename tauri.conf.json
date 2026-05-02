@@ -4,8 +4,8 @@
   "version": "1.1.0",
   "identifier": "com.pausegarra.pullyt",
   "build": {
-    "beforeDevCommand": "npm run dev --prefix ui",
-    "beforeBuildCommand": "npm run build --prefix ui",
+    "beforeDevCommand": "cd ui && npm run dev",
+    "beforeBuildCommand": "cd ui && npm run build",
     "devUrl": "http://localhost:5173",
     "frontendDist": "ui/dist"
   },
