@@ -25,3 +25,24 @@ identifier = "com.pausegarra.media-dock"
 icon = ["assets/icons/macos/AppIcon.icns"]
 osx_minimum_system_version = "10.15"
 category = "Utility"
+
+[package.metadata.deb]
+name = "media-dock"
+maintainer = "pausegarra"
+copyright = "2026, pausegarra"
+license = "MIT"
+section = "utils"
+priority = "optional"
+depends = "$auto"
+assets = [
+  ["target/x86_64-unknown-linux-gnu/release/media-dock", "usr/bin/media-dock", "755"],
+  ["packaging/linux/media-dock.desktop", "usr/share/applications/media-dock.desktop", "644"],
+  ["assets/icons/linux/hicolor/16x16/apps/media-dock.png", "usr/share/icons/hicolor/16x16/apps/media-dock.png", "644"],
+  ["assets/icons/linux/hicolor/24x24/apps/media-dock.png", "usr/share/icons/hicolor/24x24/apps/media-dock.png", "644"],
+  ["assets/icons/linux/hicolor/32x32/apps/media-dock.png", "usr/share/icons/hicolor/32x32/apps/media-dock.png", "644"],
+  ["assets/icons/linux/hicolor/48x48/apps/media-dock.png", "usr/share/icons/hicolor/48x48/apps/media-dock.png", "644"],
+  ["assets/icons/linux/hicolor/64x64/apps/media-dock.png", "usr/share/icons/hicolor/64x64/apps/media-dock.png", "644"],
+  ["assets/icons/linux/hicolor/128x128/apps/media-dock.png", "usr/share/icons/hicolor/128x128/apps/media-dock.png", "644"],
+  ["assets/icons/linux/hicolor/256x256/apps/media-dock.png", "usr/share/icons/hicolor/256x256/apps/media-dock.png", "644"],
+  ["assets/icons/linux/hicolor/512x512/apps/media-dock.png", "usr/share/icons/hicolor/512x512/apps/media-dock.png", "644"]
+]

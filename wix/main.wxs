@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product
+    Id="*"
+    Name="$(var.CargoPackageName)"
+    UpgradeCode="a5f8af2b-ef89-4588-a2b5-f2b7924691d6"
+    Version="$(var.CargoPackageVersion)"
+    Language="1033"
+    Manufacturer="pausegarra">
+    <Package
+      Id="*"
+      InstallerVersion="500"
+      Compressed="yes"
+      InstallScope="perMachine" />
+
+    <MajorUpgrade
+      DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <Feature Id="ProductFeature" Title="$(var.CargoPackageName)" Level="1">
+      <ComponentGroupRef Id="ProductComponents" />
+    </Feature>
+
+    <Icon Id="ProductIcon" SourceFile="assets/icons/windows/app.ico" />
+    <Property Id="ARPPRODUCTICON" Value="ProductIcon" />
+  </Product>
+
+  <Fragment>
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFiles64Folder">
+        <Directory Id="INSTALLFOLDER" Name="Media Dock" />
+      </Directory>
+    </Directory>
+  </Fragment>
+
+  <Fragment>
+    <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+      <Component Id="MediaDockExeComponent" Guid="e2acf926-bb4b-463e-b660-eb4dfd18f422">
+        <File
+          Id="MediaDockExe"
+          Source="target\x86_64-pc-windows-msvc\release\media-dock.exe"
+          KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+</Wix>
