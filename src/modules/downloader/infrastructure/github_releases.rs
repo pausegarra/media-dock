@@ -1,4 +1,5 @@
 use serde::Deserialize;
+use std::time::Duration;
 
 use crate::modules::downloader::domain::entities::ReleaseInfo;
 use crate::modules::downloader::domain::errors::DownloaderError;
@@ -7,15 +8,21 @@ use crate::modules::downloader::domain::ports::ReleasePort;
 const LATEST_RELEASE_URL: &str =
     "https://api.github.com/repos/pausegarra/pullyt/releases/latest";
 const USER_AGENT: &str = "pullyt update-check";
+const RELEASE_TIMEOUT_SECS: u64 = 5;
 
 pub struct GitHubReleaseAdapter;
 
 impl ReleasePort for GitHubReleaseAdapter {
     fn fetch_latest_release(&self) -> Result<ReleaseInfo, DownloaderError> {
+        eprintln!("[updates] github: fetch_latest_release start");
         let agent = ureq::AgentBuilder::new()
             .user_agent(USER_AGENT)
+            .timeout_connect(Duration::from_secs(RELEASE_TIMEOUT_SECS))
+            .timeout_read(Duration::from_secs(RELEASE_TIMEOUT_SECS))
+            .timeout_write(Duration::from_secs(RELEASE_TIMEOUT_SECS))
             .build();
 
+        eprintln!("[updates] github: requesting {LATEST_RELEASE_URL}");
         let response: LatestReleaseResponse = agent
             .get(LATEST_RELEASE_URL)
             .set("Accept", "application/vnd.github+json")
@@ -29,6 +36,11 @@ impl ReleasePort for GitHubReleaseAdapter {
             .strip_prefix('v')
             .unwrap_or(&response.tag_name)
             .to_string();
+
+        eprintln!(
+            "[updates] github: received release tag={} url={}",
+            response.tag_name, response.html_url
+        );
 
         Ok(ReleaseInfo {
             version,

@@ -22,9 +22,15 @@ impl BootstrapDependenciesUseCase {
     }
 
     pub fn execute(&self) -> Result<DependencyReport, DownloaderError> {
+        eprintln!("[deps] bootstrap: ensure yt-dlp");
         let yt_dlp = self.dependency_port.ensure_yt_dlp()?;
+        eprintln!("[deps] bootstrap: yt-dlp ready at {yt_dlp}");
+        eprintln!("[deps] bootstrap: ensure ffmpeg");
         let ffmpeg = self.dependency_port.ensure_ffmpeg()?;
+        eprintln!("[deps] bootstrap: ffmpeg ready at {ffmpeg}");
+        eprintln!("[deps] bootstrap: ensure ffprobe");
         let ffprobe = self.dependency_port.ensure_ffprobe()?;
+        eprintln!("[deps] bootstrap: ffprobe ready at {ffprobe}");
         Ok(DependencyReport {
             yt_dlp,
             ffmpeg,
