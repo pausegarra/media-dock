@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
-use crate::modules::downloader::domain::entities::{DownloadProgress, DownloadRequest};
+use crate::modules::downloader::domain::entities::{DownloadProgress, DownloadRequest, UpdateStatus};
 use crate::modules::downloader::domain::errors::DownloaderError;
-use crate::modules::downloader::domain::ports::{DependencyPort, DownloadPort, SaveDialogPort};
+use crate::modules::downloader::domain::ports::{DependencyPort, DownloadPort, ReleasePort, SaveDialogPort};
 use crate::modules::downloader::domain::value_objects::YoutubeUrl;
 
 #[derive(Debug, Clone)]
@@ -79,4 +79,41 @@ impl DownloadMediaUseCase {
         self.download_port
             .run_download(&request, &ffmpeg_path, on_progress)
     }
+}
+
+pub struct CheckForUpdatesUseCase {
+    release_port: Arc<dyn ReleasePort>,
+    current_version: String,
+}
+
+impl CheckForUpdatesUseCase {
+    pub fn new(release_port: Arc<dyn ReleasePort>, current_version: String) -> Self {
+        Self {
+            release_port,
+            current_version,
+        }
+    }
+
+    pub fn execute(&self) -> UpdateStatus {
+        match self.release_port.fetch_latest_release() {
+            Ok(release) => {
+                let current = parse_version(&self.current_version);
+                let latest = parse_version(&release.version);
+                if latest > current {
+                    UpdateStatus::UpdateAvailable(release)
+                } else {
+                    UpdateStatus::UpToDate
+                }
+            }
+            Err(_) => UpdateStatus::UpToDate,
+        }
+    }
+}
+
+fn parse_version(v: &str) -> Vec<u64> {
+    let stripped = v.strip_prefix('v').unwrap_or(v);
+    stripped
+        .split('.')
+        .filter_map(|segment| segment.parse::<u64>().ok())
+        .collect()
 }
