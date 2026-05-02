@@ -1,5 +1,5 @@
-use media_dock::modules::downloader::domain::errors::DownloaderError;
-use media_dock::modules::downloader::domain::value_objects::YoutubeUrl;
+use pullryn::modules::downloader::domain::errors::DownloaderError;
+use pullryn::modules::downloader::domain::value_objects::YoutubeUrl;
 
 #[test]
 fn accepts_youtube_watch_url() {

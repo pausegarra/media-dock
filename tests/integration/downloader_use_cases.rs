@@ -1,12 +1,12 @@
 use std::sync::Arc;
 
-use media_dock::modules::downloader::application::use_cases::DownloadMediaUseCase;
-use media_dock::modules::downloader::domain::entities::{
+use pullryn::modules::downloader::application::use_cases::DownloadMediaUseCase;
+use pullryn::modules::downloader::domain::entities::{
     AudioQuality, DownloadMode, DownloadPreset, DownloadProgress, DownloadRequest, Provider,
     VideoQuality,
 };
-use media_dock::modules::downloader::domain::errors::DownloaderError;
-use media_dock::modules::downloader::domain::ports::{DependencyPort, DownloadPort, SaveDialogPort};
+use pullryn::modules::downloader::domain::errors::DownloaderError;
+use pullryn::modules::downloader::domain::ports::{DependencyPort, DownloadPort, SaveDialogPort};
 
 struct OkDeps;
 impl DependencyPort for OkDeps {

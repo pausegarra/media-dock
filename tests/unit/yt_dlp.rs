@@ -1,4 +1,4 @@
-use media_dock::modules::downloader::infrastructure::yt_dlp::parse_progress;
+use pullryn::modules::downloader::infrastructure::yt_dlp::parse_progress;
 
 #[test]
 fn parses_percentage_line() {
